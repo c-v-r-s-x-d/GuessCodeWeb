@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  guess-code-ui:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:8000
+    stdin_open: true 
