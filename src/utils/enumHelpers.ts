@@ -26,9 +26,9 @@ export const getDifficultyLabel = (difficulty: KataDifficulty): string => {
 export const getLanguageLabel = (language: ProgrammingLanguage): string => {
   switch (language) {
     case ProgrammingLanguage.Value1:
-      return 'JavaScript';
+      return 'C++';
     case ProgrammingLanguage.Value2:
-      return 'TypeScript';
+      return 'C#';
     case ProgrammingLanguage.Value3:
       return 'Python';
     case ProgrammingLanguage.Value4:
@@ -48,5 +48,20 @@ export const getKataTypeLabel = (type: KataType): string => {
       return 'Code Optimization';
     default:
       return 'Unknown';
+  }
+};
+
+export const getPrismLanguage = (language: ProgrammingLanguage): string => {
+  switch (language) {
+    case ProgrammingLanguage.Value1:
+      return 'cpp';
+    case ProgrammingLanguage.Value2:
+      return 'csharp';
+    case ProgrammingLanguage.Value3:
+      return 'python';
+    case ProgrammingLanguage.Value4:
+      return 'java';
+    default:
+      return 'clike';
   }
 }; 

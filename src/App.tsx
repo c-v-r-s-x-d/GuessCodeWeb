@@ -3,6 +3,8 @@ import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import MainLayout from './components/layout/MainLayout';
 import ProtectedRoute from './components/ProtectedRoute';
+import Prism from 'prismjs';
+import { useEffect } from 'react';
 
 // Pages
 import Home from './pages/Home';
@@ -18,7 +20,17 @@ import NotFound from './pages/NotFound';
 import FAQ from './pages/FAQ';
 import UserProfile from './pages/UserProfile';
 
+import 'prismjs/themes/prism-tomorrow.css'; // for dark theme
+import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-typescript';
+import 'prismjs/components/prism-python';
+import 'prismjs/components/prism-java';
+
 function App() {
+  useEffect(() => {
+    Prism.highlightAll();
+  }, []);
+
   return (
     <Router>
       <ThemeProvider>

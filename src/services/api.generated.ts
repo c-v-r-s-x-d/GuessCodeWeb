@@ -49,7 +49,7 @@ export interface KataDto {
   programmingLanguage?: ProgrammingLanguage;
   kataDifficulty?: KataDifficulty;
   kataType?: KataType;
-  kataRawJsonContent?: KataJsonContent;
+  kataJsonContent?: KataJsonContent;
   /** @format int64 */
   authorId?: number;
 }

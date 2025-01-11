@@ -1,9 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useParams } from 'react-router-dom';
+import Prism from 'prismjs';
+import 'prismjs/themes/prism-okaidia.css';
+import 'prismjs/components/prism-core';
+import 'prismjs/components/prism-clike';
+import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-c';
+import 'prismjs/components/prism-cpp';
+import 'prismjs/components/prism-csharp';
+import 'prismjs/components/prism-python';
+import 'prismjs/components/prism-java';
 import { apiClient } from '../services/apiClient';
 import { KataDto, KataAnswerDto, KataSolveResultDto } from '../services/api.generated';
-import { getDifficultyLabel, getLanguageLabel, getKataTypeLabel } from '../utils/enumHelpers';
+import { getDifficultyLabel, getLanguageLabel, getKataTypeLabel, getPrismLanguage } from '../utils/enumHelpers';
+import { Link } from 'react-router-dom';
 
 export default function SolveKata() {
   const { theme } = useTheme();
@@ -22,13 +33,14 @@ export default function SolveKata() {
     try {
       const response = await apiClient.api.kataSearchDetail(kataId);
       setKata(response.data);
+      Prism.highlightAll();
     } catch (error) {
       console.error('Error loading kata:', error);
     }
   };
 
   const handleSubmit = async () => {
-    if (!id || !selectedOption) return;
+    if (!id || selectedOption === null) return;
 
     try {
       const answer: KataAnswerDto = {
@@ -47,14 +59,10 @@ export default function SolveKata() {
 
   return (
     <div className="container mx-auto px-4">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className={`p-6 rounded-lg shadow-md
-          ${theme === 'dark' ? 'bg-surface-dark' : 'bg-white'}`}>
-          <h1 className={`text-2xl font-bold mb-4
-            ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
-            {kata.title}
-          </h1>
-          
+      <div className="max-w-5xl mx-auto">
+        {/* Kata Content */}
+        <div>
+          {/* Author, difficulty, language badges */}
           <div className="flex gap-4 mb-6">
             <span className={`px-3 py-1 rounded-full text-sm
               ${theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-800'}`}>
@@ -68,15 +76,35 @@ export default function SolveKata() {
               ${theme === 'dark' ? 'bg-purple-900 text-purple-300' : 'bg-purple-100 text-purple-800'}`}>
               {getKataTypeLabel(kata.kataType!)}
             </span>
+            <Link 
+              to={`/user/${kata.authorId}`}
+              className={`px-3 py-1 rounded-full text-sm hover:underline
+                ${theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-800'}`}
+            >
+              by Author #{kata.authorId}
+            </Link>
           </div>
 
-          <div className={`prose max-w-none mb-6
-            ${theme === 'dark' ? 'prose-invert' : ''}`}>
-            {kata.kataRawJsonContent?.kataDescription}
+          {/* Description */}
+          <div className={`prose max-w-none mb-6 ${theme === 'dark' ? 'prose-invert' : ''}`}>
+            {kata.kataJsonContent?.kataDescription}
           </div>
 
-          <div className="space-y-4">
-            {kata.kataRawJsonContent?.answerOptions?.map((option) => (
+          {/* Source Code */}
+          <div className="mb-6">
+            <h2 className={`text-lg font-semibold mb-2 ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
+              Source Code
+            </h2>
+            <pre className="relative rounded-lg p-4 overflow-x-auto font-mono text-sm select-none bg-[#272822]">
+              <code className={`language-javascript block whitespace-pre`}>
+                {kata.kataJsonContent?.sourceCode}
+              </code>
+            </pre>
+          </div>
+
+          {/* Answer Options */}
+          <div className="space-y-4 mb-12">
+            {kata.kataJsonContent?.answerOptions?.map((option) => (
               <button
                 key={option.optionId}
                 onClick={() => setSelectedOption(option.optionId!)}
@@ -94,27 +122,55 @@ export default function SolveKata() {
               </button>
             ))}
           </div>
+        </div>
 
-          <button
-            onClick={handleSubmit}
-            disabled={!selectedOption}
-            className={`mt-6 w-full py-3 rounded-lg font-semibold text-white
-              ${theme === 'dark'
-                ? 'bg-primary-dark hover:bg-blue-500'
-                : 'bg-primary hover:bg-blue-700'}
-              disabled:opacity-50 disabled:cursor-not-allowed`}
-          >
-            Submit Answer
-          </button>
-
-          {result && (
-            <div className={`mt-6 p-4 rounded-lg
-              ${result.isAnswerCorrect
-                ? 'bg-green-100 text-green-800'
-                : 'bg-red-100 text-red-800'}`}>
-              {result.isAnswerCorrect ? 'Correct!' : result.error || 'Incorrect answer'}
+        {/* Discussion Section - Now at bottom with divider */}
+        <div className={`border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+          <div className="max-w-3xl mx-auto py-8">
+            <h2 className={`text-lg font-semibold mb-4 ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
+              Discussion
+            </h2>
+            
+            {/* Add Comment Form */}
+            <div className="mb-6">
+              <textarea
+                placeholder="Add your comment..."
+                rows={3}
+                className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2
+                  ${theme === 'dark' 
+                    ? 'bg-background-dark border-gray-700 text-text-dark focus:ring-primary-dark' 
+                    : 'border-gray-300 text-text-light focus:ring-primary'}`}
+              />
+              <button
+                className={`mt-2 px-4 py-2 rounded-lg text-white text-sm
+                  ${theme === 'dark'
+                    ? 'bg-primary-dark hover:bg-blue-500'
+                    : 'bg-primary hover:bg-blue-700'}`}
+              >
+                Post Comment
+              </button>
             </div>
-          )}
+
+            {/* Comments List */}
+            <div className="space-y-4">
+              <div className={`p-4 rounded-lg
+                ${theme === 'dark' ? 'bg-background-dark' : 'bg-gray-50'}`}>
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className={`font-medium ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
+                      User #123
+                    </span>
+                    <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                      2 hours ago
+                    </span>
+                  </div>
+                </div>
+                <p className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>
+                  This is a sample comment. The actual comments will be implemented later.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -25,18 +25,22 @@ export const apiClient = new Api({
   baseUrl: baseURL,
   securityWorker: async () => {
     const token = tokenService.getToken();
-    if (!token) return {};
-    
-    return {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
+    const userId = tokenService.getUserId();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
     };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    if (userId) {
+      headers['UserId'] = userId.toString();
+    }
+
+    return { headers };
   },
   baseApiParams: {
-    headers: {
-      'Content-Type': 'application/json'
-    },
     credentials: 'include',
     mode: 'cors',
     secure: true

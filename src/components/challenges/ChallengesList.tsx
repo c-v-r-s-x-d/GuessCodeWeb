@@ -75,7 +75,7 @@ export default function ChallengesList() {
           </div>
 
           <p className={`line-clamp-3 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-            {challenge.kataRawJsonContent?.kataDescription}
+            {challenge.kataJsonContent?.kataDescription}
           </p>
         </Link>
       ))}

@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "@microsoft/signalr": "^8.0.7",
     "@tailwindcss/forms": "^0.5.10",
     "@types/react": "^19.0.3",
@@ -12,6 +13,7 @@
     "cra-template-typescript": "1.2.0",
     "jwt-decode": "^3.1.2",
     "postcss": "^8.4.49",
+    "prismjs": "^1.29.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.1.1",
@@ -46,6 +48,7 @@
     ]
   },
   "devDependencies": {
+    "@types/prismjs": "^1.26.5",
     "swagger-typescript-api": "^13.0.3"
   }
 }
