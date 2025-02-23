@@ -22,6 +22,7 @@ export default function SolveKata() {
   const [kata, setKata] = useState<KataDto | null>(null);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [result, setResult] = useState<KataSolveResultDto | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -41,7 +42,8 @@ export default function SolveKata() {
 
   const handleSubmit = async () => {
     if (!id || selectedOption === null) return;
-
+    
+    setIsSubmitting(true);
     try {
       const answer: KataAnswerDto = {
         kataId: parseInt(id),
@@ -50,8 +52,17 @@ export default function SolveKata() {
       
       const response = await apiClient.api.kataSolveUpdate(answer);
       setResult(response.data);
+      
+      if (response.data.isAnswerCorrect) {
+        alert('Правильный ответ!');
+      } else {
+        alert(response.data.error || 'Неправильный ответ. Попробуйте еще раз.');
+      }
     } catch (error) {
       console.error('Error submitting solution:', error);
+      alert('Произошла ошибка при отправке ответа');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -121,6 +132,20 @@ export default function SolveKata() {
                 {option.option}
               </button>
             ))}
+            
+            <button
+              onClick={handleSubmit}
+              disabled={selectedOption === null || isSubmitting}
+              className={`w-full py-3 mt-6 rounded-lg text-white font-semibold transition-colors
+                ${selectedOption === null || isSubmitting
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : theme === 'dark'
+                    ? 'bg-primary-dark hover:bg-blue-500'
+                    : 'bg-primary hover:bg-blue-700'
+                }`}
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit Answer'}
+            </button>
           </div>
         </div>
 

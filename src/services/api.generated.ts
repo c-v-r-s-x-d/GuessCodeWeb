@@ -57,7 +57,6 @@ export interface KataDto {
 export interface KataJsonContent {
   kataDescription?: string | null;
   sourceCode?: string | null;
-  answerOptionsRawJson?: string | null;
   answerOptions?: AnswerOption[] | null;
 }
 

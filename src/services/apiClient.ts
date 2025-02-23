@@ -1,7 +1,7 @@
 import { Api } from './api.generated';
 import { tokenService } from './tokenService';
 
-const baseURL = process.env.REACT_APP_API_URL || 'http://192.168.0.35:5000';
+const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 // Create custom fetch function to handle 401 responses
 const customFetch = async (...args: Parameters<typeof fetch>) => {
