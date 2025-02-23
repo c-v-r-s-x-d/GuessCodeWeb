@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: guesscode-frontend
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: guesscode-frontend
+  template:
+    metadata:
+      labels:
+        app: guesscode-frontend
+    spec:
+      containers:
+        - name: guesscode-frontend-container
+          image: my-dockerhub-username/guesscode-frontend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: guesscode-frontend-service
+  namespace: dev
+spec:
+  selector:
+    app: guesscode-frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: guesscode-ingress
+  namespace: dev
+  annotations:
+    traefik.ingress.k8s.io/router.middlewares: cors@kubernetescrd
+    traefik.ingress.kubernetes.io/cors-allow-origin: "http://guess-code.ru"
+    traefik.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    traefik.ingress.kubernetes.io/cors-allow-headers: "Authorization, Content-Type"
+    traefik.ingress.kubernetes.io/cors-allow-credentials: "true"
+spec:
+  rules:
+    - host: api.guess-code.ru
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: guesscode-api-service
+                port:
+                  number: 5000
+    - host: hangfire.guess-code.ru
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: guesscode-scheduler-service
+                port:
+                  number: 5001
+    - host: guess-code.ru
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: guesscode-frontend-service
+                port:
+                  number: 80

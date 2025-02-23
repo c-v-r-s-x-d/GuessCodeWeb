@@ -67,7 +67,7 @@ export default function Footer() {
               Contact
             </h4>
             <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
-              Email: support@guesscode.com
+              Email: admin@guess-code.site
             </p>
           </div>
         </div>
