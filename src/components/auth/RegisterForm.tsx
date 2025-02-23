@@ -83,7 +83,7 @@ export default function RegisterForm() {
                 {field.charAt(0).toUpperCase() + field.slice(1).replace('Password', ' Password')}
               </label>
               <input
-                type={field.includes('password') ? 'password' : field === 'email' ? 'email' : 'text'}
+                type={field === 'password' || field === 'confirmPassword' ? 'password' : field === 'email' ? 'email' : 'text'}
                 id={field}
                 name={field}
                 value={formData[field]}
