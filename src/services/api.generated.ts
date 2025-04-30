@@ -23,11 +23,31 @@ export interface AnswerOption {
   isCorrect?: boolean;
 }
 
-export interface KataAnswerDto {
+export interface KataBugFindingAnswerDto {
+  /** @format int64 */
+  kataId?: number;
+  sourceCode?: string | null;
+}
+
+export interface KataBugFindingSolveResultDto {
+  isAnswerCorrect?: boolean;
+  error?: string | null;
+  /** @format int32 */
+  pointsEarned?: number | null;
+}
+
+export interface KataCodeReadingAnswerDto {
   /** @format int64 */
   kataId?: number;
   /** @format int32 */
   optionId?: number;
+}
+
+export interface KataCodeReadingSolveResultDto {
+  isAnswerCorrect?: boolean;
+  error?: string | null;
+  /** @format int32 */
+  pointsEarned?: number | null;
 }
 
 /** @format int32 */
@@ -52,17 +72,13 @@ export interface KataDto {
   kataJsonContent?: KataJsonContent;
   /** @format int64 */
   authorId?: number;
+  isKataResolved?: boolean;
 }
 
 export interface KataJsonContent {
   kataDescription?: string | null;
   sourceCode?: string | null;
   answerOptions?: AnswerOption[] | null;
-}
-
-export interface KataSolveResultDto {
-  isAnswerCorrect?: boolean;
-  error?: string | null;
 }
 
 /** @format int32 */
@@ -413,6 +429,29 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     /**
      * No description
      *
+     * @tags File
+     * @name FileCreate
+     * @request POST:/api/file
+     */
+    fileCreate: (
+      data: {
+        /** @format binary */
+        file?: File;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<string, any>({
+        path: `/api/file`,
+        method: "POST",
+        body: data,
+        type: ContentType.FormData,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
      * @tags KataAdministration
      * @name KataAdministrationCreate
      * @request POST:/api/kata-administration
@@ -505,12 +544,29 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * No description
      *
      * @tags KataSolve
-     * @name KataSolveUpdate
-     * @request PUT:/api/kata-solve
+     * @name KataSolveCodeReadingUpdate
+     * @request PUT:/api/kata-solve/code-reading
      */
-    kataSolveUpdate: (data: KataAnswerDto, params: RequestParams = {}) =>
-      this.request<KataSolveResultDto, any>({
-        path: `/api/kata-solve`,
+    kataSolveCodeReadingUpdate: (data: KataCodeReadingAnswerDto, params: RequestParams = {}) =>
+      this.request<KataCodeReadingSolveResultDto, any>({
+        path: `/api/kata-solve/code-reading`,
+        method: "PUT",
+        body: data,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags KataSolve
+     * @name KataSolveBugFindingUpdate
+     * @request PUT:/api/kata-solve/bug-finding
+     */
+    kataSolveBugFindingUpdate: (data: KataBugFindingAnswerDto, params: RequestParams = {}) =>
+      this.request<KataBugFindingSolveResultDto, any>({
+        path: `/api/kata-solve/bug-finding`,
         method: "PUT",
         body: data,
         type: ContentType.Json,
@@ -545,6 +601,28 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         path: `/api/profile-info/${userId}`,
         method: "GET",
         format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags ProfileInfo
+     * @name ProfileInfoAvatarCreate
+     * @request POST:/api/profile-info/avatar
+     */
+    profileInfoAvatarCreate: (
+      data: {
+        /** @format binary */
+        file?: File;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<void, any>({
+        path: `/api/profile-info/avatar`,
+        method: "POST",
+        body: data,
+        type: ContentType.FormData,
         ...params,
       }),
 

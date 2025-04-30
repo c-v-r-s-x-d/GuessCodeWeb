@@ -1,23 +1,35 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { ActivityStatus } from '../services/api.generated';
+import { ActivityStatus, ContentType } from '../services/api.generated';
+import { apiClient } from '../services/apiClient';
+import { tokenService } from '../services/tokenService';
 
 export default function Profile() {
   const { theme } = useTheme();
-  const { user } = useAuth();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click();
-  };
+  const { user, isLoading } = useAuth();
+  const [uploading, setUploading] = useState(false);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      // TODO: Implement avatar upload logic here
-      console.log('File selected:', file);
+    if (!file || !user?.userId) return;
+    setUploading(true);
+    try {
+      await apiClient.api.profileInfoAvatarCreate({ file });
+    } catch {
+      alert('Ошибка загрузки аватара');
+    } finally {
+      setUploading(false);
+      event.target.value = '';
     }
+  };
+
+  const getAvatarUrl = () => {
+    if (user?.avatarUrl) {
+      const apiUrl = (process.env.REACT_APP_API_URL || 'http://localhost:5000').replace(/\/$/, '');
+      return `${apiUrl}/static/${user.avatarUrl}`;
+    }
+    return '/default-avatar.png';
   };
 
   const getStatusColor = (status: ActivityStatus) => {
@@ -46,11 +58,11 @@ export default function Profile() {
     }
   };
 
-  if (!user) {
+  if (!user || isLoading) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         <p className={`text-lg ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
-          Loading profile...
+          Загрузка профиля...
         </p>
       </div>
     );
@@ -62,30 +74,27 @@ export default function Profile() {
         ${theme === 'dark' ? 'bg-surface-dark' : 'bg-white'}`}>
         <div className="flex items-start gap-8">
           <div className="flex-shrink-0 relative group">
-            <div 
-              className="relative cursor-pointer"
-              onClick={handleAvatarClick}
-            >
-              <img 
-                src={user.avatarUrl || '/default-avatar.png'} 
-                alt="Profile" 
-                className="w-32 h-32 rounded-lg object-cover"
+            <label className="cursor-pointer block w-32 h-32">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                disabled={uploading}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                title="Выбрать аватар"
+              />
+              <img
+                src={getAvatarUrl()}
+                alt="Аватар"
+                className="w-32 h-32 rounded-lg object-cover border"
+                style={uploading ? { opacity: 0.5 } : {}}
               />
               <div className={`absolute inset-0 flex items-center justify-center rounded-lg
                 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity
                 text-white font-medium`}>
-                Click to change
+                {uploading ? 'Загрузка...' : 'Кликните, чтобы изменить'}
               </div>
-            </div>
-            
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept="image/*"
-              className="hidden"
-            />
-
+            </label>
             <div className={`absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-white
               ${getStatusColor(user.activityStatus)}`}>
               <div className="absolute left-full bottom-0 ml-2 hidden group-hover:block">

@@ -12,7 +12,7 @@ import 'prismjs/components/prism-csharp';
 import 'prismjs/components/prism-python';
 import 'prismjs/components/prism-java';
 import { apiClient } from '../services/apiClient';
-import { KataDto, KataAnswerDto, KataSolveResultDto } from '../services/api.generated';
+import { KataDto, KataCodeReadingAnswerDto, KataCodeReadingSolveResultDto } from '../services/api.generated';
 import { getDifficultyLabel, getLanguageLabel, getKataTypeLabel, getPrismLanguage } from '../utils/enumHelpers';
 import { Link } from 'react-router-dom';
 
@@ -21,7 +21,7 @@ export default function SolveKata() {
   const { id } = useParams();
   const [kata, setKata] = useState<KataDto | null>(null);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
-  const [result, setResult] = useState<KataSolveResultDto | null>(null);
+  const [result, setResult] = useState<KataCodeReadingSolveResultDto | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -45,12 +45,12 @@ export default function SolveKata() {
     
     setIsSubmitting(true);
     try {
-      const answer: KataAnswerDto = {
+      const answer: KataCodeReadingAnswerDto = {
         kataId: parseInt(id),
         optionId: selectedOption
       };
       
-      const response = await apiClient.api.kataSolveUpdate(answer);
+      const response = await apiClient.api.kataSolveCodeReadingUpdate(answer);
       setResult(response.data);
       
       if (response.data.isAnswerCorrect) {

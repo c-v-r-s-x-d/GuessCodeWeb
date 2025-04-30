@@ -1,9 +1,10 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ProfileInfoDto, ActivityStatus } from '../services/api.generated';
 import { apiClient } from '../services/apiClient';
+import { tokenService } from '../services/tokenService';
 
 const getStatusColor = (status: ActivityStatus) => {
   switch (status) {
@@ -37,34 +38,69 @@ export default function UserProfile() {
   const [user, setUser] = useState<ProfileInfoDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const myUserId = tokenService.getUserId();
+  const isMyProfile = myUserId && userId && String(myUserId) === String(userId);
+
+  const loadUser = async () => {
+    if (!userId) {
+      setError('User ID not provided');
+      setLoading(false);
+      return;
+    }
+    try {
+      const response = await apiClient.api.profileInfoDetail(parseInt(userId));
+      setUser(response.data);
+    } catch (err) {
+      setError('Не удалось загрузить профиль');
+      console.error('Error loading user:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadUser = async () => {
-      if (!userId) {
-        setError('User ID not provided');
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const response = await apiClient.api.profileInfoDetail(parseInt(userId));
-        setUser(response.data);
-      } catch (err) {
-        setError('Failed to load user profile');
-        console.error('Error loading user:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadUser();
+    // eslint-disable-next-line
   }, [userId]);
+
+  const handleAvatarClick = () => {
+    if (isMyProfile && fileInputRef.current) {
+      fileInputRef.current.value = ''; // сбросить значение
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && user?.userId) {
+      setUploading(true);
+      try {
+        alert("середина")
+        await apiClient.api.profileInfoAvatarCreate({ file });
+        await loadUser();
+      } catch (e) {
+      } finally {
+        setUploading(false);
+      }
+    }
+  };
+
+  const getAvatarUrl = () => {
+    if (user?.avatarUrl) {
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/';
+      return apiUrl.replace(/\/$/, '') + '/static/' + user.avatarUrl;
+    }
+    return '/default-avatar.png';
+  };
 
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         <p className={`text-lg ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
-          Loading profile...
+          Загрузка профиля...
         </p>
       </div>
     );
@@ -74,7 +110,7 @@ export default function UserProfile() {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         <p className={`text-lg ${theme === 'dark' ? 'text-red-400' : 'text-red-600'}`}>
-          {error || 'User not found'}
+          {error || 'Пользователь не найден'}
         </p>
       </div>
     );
@@ -86,25 +122,49 @@ export default function UserProfile() {
         ${theme === 'dark' ? 'bg-surface-dark' : 'bg-white'}`}>
         <div className="flex items-start gap-8">
           <div className="flex-shrink-0 relative group">
-            <img 
-              src={user.avatarUrl || '/default-avatar.png'} 
-              alt="Profile" 
-              className="w-32 h-32 rounded-lg object-cover"
-            />
-            
-            <div className={`absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-white
-              ${getStatusColor(user.activityStatus)}`}>
+            {isMyProfile ? (
+              <label className="cursor-pointer block w-32 h-32">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  disabled={uploading}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  title="Выбрать аватар"
+                />
+                <img
+                  src={user.avatarUrl 
+                    ? `${(process.env.REACT_APP_API_URL || 'http://localhost:5000').replace(/\/$/, '')}/static/${user.avatarUrl}` 
+                    : '/default-avatar.png'} 
+                  alt="Profile" 
+                  className="w-32 h-32 rounded-lg object-cover"
+                />
+                <div className={`absolute inset-0 flex items-center justify-center rounded-lg
+                  bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity
+                  text-white font-medium`}>
+                  {uploading ? 'Загрузка...' : 'Кликните, чтобы изменить'}
+                </div>
+              </label>
+            ) : (
+              <img
+                src={user.avatarUrl 
+                  ? `${(process.env.REACT_APP_API_URL || 'http://localhost:5000').replace(/\/$/, '')}/static/${user.avatarUrl}` 
+                  : '/default-avatar.png'} 
+                alt="Profile" 
+                className="w-32 h-32 rounded-lg object-cover"
+              />
+            )}
+            <div className={`absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-white ${getStatusColor(user.activityStatus)}`}>
               <div className="absolute left-full bottom-0 ml-2 hidden group-hover:block">
                 <div className={`px-2 py-1 text-sm rounded shadow-lg whitespace-nowrap
-                  ${theme === 'dark' 
-                    ? 'bg-gray-800 text-gray-200' 
+                  ${theme === 'dark'
+                    ? 'bg-gray-800 text-gray-200'
                     : 'bg-white text-gray-800'}`}>
-                  Current status: {getStatusText(user.activityStatus)}
+                  Статус: {getStatusText(user.activityStatus)}
                 </div>
               </div>
             </div>
           </div>
-          
           <div className="flex-grow">
             <div className={`flex flex-col gap-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
               <h1 className="text-2xl font-semibold">{user.username}</h1>
