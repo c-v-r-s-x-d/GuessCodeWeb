@@ -79,6 +79,7 @@ export interface KataJsonContent {
   kataDescription?: string | null;
   sourceCode?: string | null;
   answerOptions?: AnswerOption[] | null;
+  testCases?: string | null;
 }
 
 /** @format int32 */

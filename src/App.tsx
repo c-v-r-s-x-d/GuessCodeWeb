@@ -8,7 +8,6 @@ import { useEffect } from 'react';
 
 // Pages
 import Home from './pages/Home';
-import About from './pages/About';
 import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
 import Profile from './pages/Profile';
@@ -19,6 +18,9 @@ import SolveKata from './pages/SolveKata';
 import NotFound from './pages/NotFound';
 import FAQ from './pages/FAQ';
 import UserProfile from './pages/UserProfile';
+import BecomeMentor from './pages/BecomeMentor';
+import FindMentor from './pages/FindMentor';
+import AdminPanel from './pages/AdminPanel';
 
 import 'prismjs/themes/prism-tomorrow.css'; // for dark theme
 import 'prismjs/components/prism-javascript';
@@ -38,7 +40,6 @@ function App() {
           <MainLayout>
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/about" element={<About />} />
               <Route path="/login" element={<LoginForm />} />
               <Route path="/register" element={<RegisterForm />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
@@ -65,7 +66,22 @@ function App() {
                   <SolveKata />
                 </ProtectedRoute>
               } />
+              <Route path="/become-mentor" element={
+                <ProtectedRoute>
+                  <BecomeMentor />
+                </ProtectedRoute>
+              } />
+              <Route path="/find-mentor" element={
+                <ProtectedRoute>
+                  <FindMentor />
+                </ProtectedRoute>
+              } />
               <Route path="/user/:userId" element={<UserProfile />} />
+              <Route path="/admin" element={
+                <ProtectedRoute>
+                  <AdminPanel />
+                </ProtectedRoute>
+              } />
 
               {/* 404 catch-all route */}
               <Route path="*" element={<NotFound />} />

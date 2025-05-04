@@ -3,6 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import GitHubButton from './GitHubButton';
+import TelegramButton from './TelegramButton';
+import LoadingSpinner from '../common/LoadingSpinner';
 
 export default function LoginForm() {
   const { theme } = useTheme();
@@ -13,6 +15,7 @@ export default function LoginForm() {
     password: '',
   });
   const [errors, setErrors] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -24,6 +27,7 @@ export default function LoginForm() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setErrors([]);
+    setIsLoading(true);
 
     try {
       const loginDto = {
@@ -35,6 +39,8 @@ export default function LoginForm() {
       navigate('/');
     } catch (error) {
       setErrors(['Invalid credentials. Please try again.']);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -72,6 +78,7 @@ export default function LoginForm() {
                   ? 'bg-background-dark border-gray-700 text-text-dark' 
                   : 'border-gray-300 text-text-light'}`}
               required
+              disabled={isLoading}
             />
           </div>
 
@@ -91,18 +98,24 @@ export default function LoginForm() {
                   ? 'bg-background-dark border-gray-700 text-text-dark' 
                   : 'border-gray-300 text-text-light'}`}
               required
+              disabled={isLoading}
             />
           </div>
 
           <div className="space-y-4">
             <button
               type="submit"
-              className={`w-full py-2 rounded-lg text-white transition-colors
+              className={`w-full py-2 rounded-lg text-white transition-colors flex items-center justify-center
                 ${theme === 'dark' 
                   ? 'bg-primary-dark hover:bg-blue-500' 
                   : 'bg-primary hover:bg-blue-700'}`}
+              disabled={isLoading}
             >
-              Login
+              {isLoading ? (
+                <LoadingSpinner size="small" color="text-white" />
+              ) : (
+                'Login'
+              )}
             </button>
 
             <div className={`relative flex items-center gap-3
@@ -118,11 +131,21 @@ export default function LoginForm() {
                 // TODO: Implement GitHub OAuth
                 console.log('GitHub login clicked');
               }}
+              disabled={isLoading}
+            />
+
+            <TelegramButton 
+              text="Continue with Telegram"
+              onClick={() => {
+                // TODO: Implement Telegram OAuth
+                console.log('Telegram login clicked');
+              }}
+              disabled={isLoading}
             />
           </div>
         </form>
 
-        <div className={`mt-6 text-sm text-center space-y-2
+        <div className={`mt-6 text-sm text-center
           ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
           <p>
             <Link 

@@ -168,12 +168,55 @@ export default function UserProfile() {
           <div className="flex-grow">
             <div className={`flex flex-col gap-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
               <h1 className="text-2xl font-semibold">{user.username}</h1>
+              <div className="flex items-center gap-4 mt-2">
+                <div className={`px-4 py-2 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                  <span className="text-sm font-medium">Ранг:</span>
+                  <span className="ml-2 font-bold text-blue-500">Новичок</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className={`rounded-lg shadow-md p-6
+          ${theme === 'dark' ? 'bg-surface-dark' : 'bg-white'}`}>
+          <h2 className={`text-xl font-semibold mb-4
+            ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
+            Достижения как ментора
+          </h2>
+          <div className="space-y-4">
+            <div className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Учеников</p>
+                  <p className="text-xl font-bold">5</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Сессий проведено</p>
+                  <p className="text-xl font-bold">24</p>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h3 className={`text-lg font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                Награды
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className={`p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                  <p className="text-sm font-medium text-yellow-500">Золотой ментор</p>
+                  <p className="text-xs text-gray-500">10+ успешных учеников</p>
+                </div>
+                <div className={`p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                  <p className="text-sm font-medium text-blue-500">Эксперт по алгоритмам</p>
+                  <p className="text-xs text-gray-500">50+ решенных задач</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className={`rounded-lg shadow-md p-6
           ${theme === 'dark' ? 'bg-surface-dark' : 'bg-white'}`}>
           <h2 className={`text-xl font-semibold mb-4

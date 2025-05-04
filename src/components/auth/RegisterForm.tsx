@@ -1,21 +1,23 @@
 import { useState, FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { apiClient } from '../../services/apiClient';
 import { useTheme } from '../../context/ThemeContext';
 import GitHubButton from './GitHubButton';
+import TelegramButton from './TelegramButton';
+import LoadingSpinner from '../common/LoadingSpinner';
 
 export default function RegisterForm() {
+  const { theme } = useTheme();
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { register } = useAuth();
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
   });
   const [errors, setErrors] = useState<string[]>([]);
-  const { theme } = useTheme();
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -27,41 +29,37 @@ export default function RegisterForm() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setErrors([]);
+    setIsLoading(true);
 
     if (formData.password !== formData.confirmPassword) {
       setErrors(['Passwords do not match']);
+      setIsLoading(false);
       return;
     }
 
     try {
       const registerDto = {
+        username: formData.username,
         email: formData.email,
-        username: formData.username,
         password: formData.password
       };
       
-      await apiClient.api.authRegisterCreate(registerDto);
-      
-      // After successful registration, login the user
-      const loginDto = {
-        username: formData.username,
-        password: formData.password
-      };
-      
-      await login(loginDto);
+      await register(registerDto);
       navigate('/');
     } catch (error) {
       setErrors(['Registration failed. Please try again.']);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-[calc(100vh-16rem)] flex items-center justify-center">
+    <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
       <div className={`p-8 rounded-lg shadow-md w-full max-w-md
         ${theme === 'dark' ? 'bg-surface-dark' : 'bg-white'}`}>
         <h2 className={`text-2xl font-bold text-center mb-6
-          ${theme === 'dark' ? 'text-text-dark' : 'text-gray-900'}`}>
-          Create Account
+          ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
+          Register
         </h2>
         
         {errors.length > 0 && (
@@ -73,39 +71,100 @@ export default function RegisterForm() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {['username', 'email', 'password', 'confirmPassword'].map((field) => (
-            <div key={field}>
-              <label 
-                htmlFor={field} 
-                className={`block text-sm font-medium mb-1
-                  ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}
-              >
-                {field.charAt(0).toUpperCase() + field.slice(1).replace('Password', ' Password')}
-              </label>
-              <input
-                type={field === 'password' || field === 'confirmPassword' ? 'password' : field === 'email' ? 'email' : 'text'}
-                id={field}
-                name={field}
-                value={formData[field]}
-                onChange={handleChange}
-                className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-${theme}
-                  ${theme === 'dark' 
-                    ? 'bg-background-dark border-gray-700 text-text-dark' 
-                    : 'border-gray-300 text-text-light'}`}
-                required
-              />
-            </div>
-          ))}
+          <div>
+            <label htmlFor="username" className={`block text-sm font-medium mb-1
+              ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+              Username
+            </label>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-${theme}
+                ${theme === 'dark' 
+                  ? 'bg-background-dark border-gray-700 text-text-dark' 
+                  : 'border-gray-300 text-text-light'}`}
+              required
+              disabled={isLoading}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="email" className={`block text-sm font-medium mb-1
+              ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+              Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-${theme}
+                ${theme === 'dark' 
+                  ? 'bg-background-dark border-gray-700 text-text-dark' 
+                  : 'border-gray-300 text-text-light'}`}
+              required
+              disabled={isLoading}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="password" className={`block text-sm font-medium mb-1
+              ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+              Password
+            </label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-${theme}
+                ${theme === 'dark' 
+                  ? 'bg-background-dark border-gray-700 text-text-dark' 
+                  : 'border-gray-300 text-text-light'}`}
+              required
+              disabled={isLoading}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="confirmPassword" className={`block text-sm font-medium mb-1
+              ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+              Confirm Password
+            </label>
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-${theme}
+                ${theme === 'dark' 
+                  ? 'bg-background-dark border-gray-700 text-text-dark' 
+                  : 'border-gray-300 text-text-light'}`}
+              required
+              disabled={isLoading}
+            />
+          </div>
 
           <div className="space-y-4">
             <button
               type="submit"
-              className={`w-full py-2 rounded-lg text-white transition-colors
+              className={`w-full py-2 rounded-lg text-white transition-colors flex items-center justify-center
                 ${theme === 'dark' 
                   ? 'bg-primary-dark hover:bg-blue-500' 
                   : 'bg-primary hover:bg-blue-700'}`}
+              disabled={isLoading}
             >
-              Register
+              {isLoading ? (
+                <LoadingSpinner size="small" color="text-white" />
+              ) : (
+                'Register'
+              )}
             </button>
 
             <div className={`relative flex items-center gap-3
@@ -116,11 +175,21 @@ export default function RegisterForm() {
             </div>
 
             <GitHubButton 
-              text="Sign up with GitHub"
+              text="Continue with GitHub"
               onClick={() => {
                 // TODO: Implement GitHub OAuth
-                console.log('GitHub signup clicked');
+                console.log('GitHub login clicked');
               }}
+              disabled={isLoading}
+            />
+
+            <TelegramButton 
+              text="Continue with Telegram"
+              onClick={() => {
+                // TODO: Implement Telegram OAuth
+                console.log('Telegram login clicked');
+              }}
+              disabled={isLoading}
             />
           </div>
         </form>
