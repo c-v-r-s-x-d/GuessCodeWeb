@@ -2,34 +2,56 @@ import { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import { apiClient } from '../services/apiClient';
+import { MentorDto, ProgrammingLanguage, MentorAvailability } from '../services/api.generated';
+import { getMentorAvailabilityLabel, getLanguageLabel } from '../utils/enumHelpers';
 
 export default function BecomeMentor() {
   const { theme } = useTheme();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    experience: '',
-    expertise: '',
-    availability: '',
-    bio: '',
+  const [formData, setFormData] = useState<Partial<MentorDto>>({
+    experience: 0,
+    programmingLanguages: [],
+    availability: 0,
+    about: '',
+    userId: user.userId
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    if (name === 'programmingLanguages') {
+      const languages = value.split(',').map(lang => Number(lang.trim()) as ProgrammingLanguage);
+      setFormData(prev => ({ ...prev, programmingLanguages: languages }));
+    } else if (name === 'experience') {
+      setFormData(prev => ({ ...prev, [name]: Number(value) }));
+    } else if (name === 'availability') {
+      setFormData(prev => ({ ...prev, [name]: Number(value) }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleLanguageChange = (language: ProgrammingLanguage) => {
+    setFormData(prev => {
+      const currentLanguages = prev.programmingLanguages || [];
+      const newLanguages = currentLanguages.includes(language)
+        ? currentLanguages.filter(lang => lang !== language)
+        : [...currentLanguages, language];
+      return { ...prev, programmingLanguages: newLanguages };
     });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // TODO: Implement mentor registration
     try {
-      // await apiClient.api.mentorRegisterCreate(formData);
-      console.log('Mentor registration submitted:', formData);
+      await apiClient.mentorship(formData as MentorDto);
+      // TODO: Показать уведомление об успешной отправке
+      console.log('Mentor registration submitted successfully');
     } catch (error) {
       console.error('Error submitting mentor registration:', error);
+      // TODO: Показать уведомление об ошибке
     } finally {
       setIsLoading(false);
     }
@@ -76,24 +98,37 @@ export default function BecomeMentor() {
             </div>
 
             <div>
-              <label htmlFor="expertise" className={`block text-sm font-medium mb-1
+              <label className={`block text-sm font-medium mb-2
                 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                Области экспертизы
+                Языки программирования
               </label>
-              <input
-                type="text"
-                id="expertise"
-                name="expertise"
-                value={formData.expertise}
-                onChange={handleChange}
-                className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-${theme}
-                  ${theme === 'dark' 
-                    ? 'bg-background-dark border-gray-700 text-text-dark' 
-                    : 'border-gray-300 text-text-light'}`}
-                placeholder="Например: JavaScript, React, TypeScript"
-                required
-                disabled={isLoading}
-              />
+              <div className="grid grid-cols-2 gap-4">
+                {Object.values(ProgrammingLanguage)
+                  .filter(value => typeof value === 'number')
+                  .map(language => (
+                    <div key={language} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={`lang-${language}`}
+                        checked={formData.programmingLanguages?.includes(language as ProgrammingLanguage)}
+                        onChange={() => handleLanguageChange(language as ProgrammingLanguage)}
+                        className={`h-4 w-4 rounded
+                          ${theme === 'dark' ? 'text-primary-dark' : 'text-primary'}`}
+                        disabled={isLoading}
+                      />
+                      <label
+                        htmlFor={`lang-${language}`}
+                        className={`text-sm cursor-pointer
+                          ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}
+                      >
+                        {getLanguageLabel(language as ProgrammingLanguage)}
+                      </label>
+                    </div>
+                  ))}
+              </div>
+              <p className={`mt-2 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                Выберите языки программирования, в которых вы можете помочь другим
+              </p>
             </div>
 
             <div>
@@ -101,8 +136,7 @@ export default function BecomeMentor() {
                 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                 Доступность
               </label>
-              <input
-                type="text"
+              <select
                 id="availability"
                 name="availability"
                 value={formData.availability}
@@ -111,21 +145,28 @@ export default function BecomeMentor() {
                   ${theme === 'dark' 
                     ? 'bg-background-dark border-gray-700 text-text-dark' 
                     : 'border-gray-300 text-text-light'}`}
-                placeholder="Например: 2 часа в неделю"
                 required
                 disabled={isLoading}
-              />
+              >
+                {Object.values(MentorAvailability)
+                  .filter(value => typeof value === 'number')
+                  .map(value => (
+                    <option key={value} value={value}>
+                      {getMentorAvailabilityLabel(value as MentorAvailability)}
+                    </option>
+                  ))}
+              </select>
             </div>
 
             <div>
-              <label htmlFor="bio" className={`block text-sm font-medium mb-1
+              <label htmlFor="about" className={`block text-sm font-medium mb-1
                 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                 О себе
               </label>
               <textarea
-                id="bio"
-                name="bio"
-                value={formData.bio}
+                id="about"
+                name="about"
+                value={formData.about}
                 onChange={handleChange}
                 rows={4}
                 className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-${theme}

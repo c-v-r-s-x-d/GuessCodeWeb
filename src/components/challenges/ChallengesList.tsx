@@ -14,9 +14,9 @@ export default function ChallengesList() {
 
   useEffect(() => {
     const fetchChallenges = async () => {
-      const result = await executeWithLoading(apiClient.api.kataSearchList());
-      if (result?.data) {
-        setChallenges(result.data);
+      const result = await executeWithLoading(apiClient.kataSearchAll(undefined, undefined, undefined));
+      if (result) {
+        setChallenges(result);
       }
     };
 

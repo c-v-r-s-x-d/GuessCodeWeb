@@ -12,9 +12,9 @@ export default function Katas() {
   const [featuredKata, setFeaturedKata] = useState<KataDto | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [filter, setFilter] = useState({
-    difficulty: KataDifficulty.Value1,
-    language: ProgrammingLanguage.Value1,
-    type: KataType.Value1,
+    difficulty: 1,
+    language: 1,
+    type: 1,
     search: ''
   });
 
@@ -25,14 +25,14 @@ export default function Katas() {
   const loadKatas = async () => {
     setIsLoading(true);
     try {
-      const response = await apiClient.api.kataSearchList({
-        kataDifficulty: filter.difficulty,
-        kataLanguage: filter.language,
-        kataType: filter.type
-      });
-      setKatas(response.data || []);
-      if (!featuredKata && response.data && response.data.length > 0) {
-        setFeaturedKata(response.data[0]);
+      const response = await apiClient.kataSearchAll(
+        filter.language,
+        filter.type,
+        filter.difficulty
+      );
+      setKatas(response || []);
+      if (!featuredKata && response && response.length > 0) {
+        setFeaturedKata(response[0]);
       }
     } catch (error) {
       console.error('Error loading katas:', error);

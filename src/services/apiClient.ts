@@ -1,49 +1,65 @@
-import { Api } from './api.generated';
 import { tokenService } from './tokenService';
+import { Client } from "./api.generated";
 
 const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-// Create custom fetch function to handle 401 responses
-const customFetch = async (...args: Parameters<typeof fetch>) => {
-  const response = await fetch(...args);
-  
-  // Only handle 401 for non-profile endpoints to prevent logout loops
-  if (response.status === 401 && !args[0].toString().includes('/profile-info')) {
-    tokenService.removeTokenData();
-    window.dispatchEvent(new Event('auth:logout'));
-  }
-  
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.message || 'Network response was not ok');
-  }
-  
-  return response;
-};
+interface ApiError extends Error {
+  status?: number;
+  data?: any;
+}
 
-export const apiClient = new Api({
-  baseUrl: baseURL,
-  securityWorker: async () => {
+// Создаем кастомную функцию fetch для обработки ошибок
+const customFetch = async (url: RequestInfo, init?: RequestInit): Promise<Response> => {
+  try {
     const token = tokenService.getToken();
     const userId = tokenService.getUserId();
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json'
-    };
+
+    // Добавляем заголовки авторизации
+    const headers = new Headers(init?.headers);
+    
+    // Устанавливаем Content-Type только если это не FormData
+    if (!(init?.body instanceof FormData)) {
+      headers.set('Content-Type', 'application/json');
+      headers.set('Accept', 'application/json');
+    }
 
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+      headers.set('Authorization', `Bearer ${token}`);
     }
 
     if (userId) {
-      headers['UserId'] = userId.toString();
+      headers.set('UserId', userId.toString());
     }
 
-    return { headers };
-  },
-  baseApiParams: {
-    credentials: 'include',
-    mode: 'cors',
-    secure: true
-  },
-  customFetch
-});
+    const response = await fetch(url, {
+      ...init,
+      headers,
+      credentials: 'include',
+      mode: 'cors'
+    });
+    
+    // Обрабатываем 401 только для не-профильных эндпоинтов
+    if (response.status === 401 && !url.toString().includes('/profile-info')) {
+      tokenService.removeTokenData();
+      window.dispatchEvent(new Event('auth:logout'));
+      throw new Error('Unauthorized access');
+    }
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const error: ApiError = new Error(errorData.message || 'Network response was not ok');
+      error.status = response.status;
+      error.data = errorData;
+      throw error;
+    }
+    
+    return response;
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('An unexpected error occurred');
+  }
+};
+
+export const apiClient = new Client(baseURL, { fetch: customFetch });

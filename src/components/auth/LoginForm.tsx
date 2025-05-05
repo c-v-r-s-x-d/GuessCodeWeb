@@ -5,6 +5,7 @@ import { useTheme } from '../../context/ThemeContext';
 import GitHubButton from './GitHubButton';
 import TelegramButton from './TelegramButton';
 import LoadingSpinner from '../common/LoadingSpinner';
+import { LoginDto } from '../../services/api.generated';
 
 export default function LoginForm() {
   const { theme } = useTheme();
@@ -18,10 +19,11 @@ export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -30,10 +32,10 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      const loginDto = {
+      const loginDto = new LoginDto({
         username: formData.username,
         password: formData.password
-      };
+      });
       
       await login(loginDto);
       navigate('/');

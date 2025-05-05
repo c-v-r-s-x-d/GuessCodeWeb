@@ -1,22 +1,23 @@
 import { KataDifficulty, ProgrammingLanguage, KataType } from '../services/api.generated';
+import { MentorAvailability } from '../services/api.generated';
 
 export const getDifficultyLabel = (difficulty: KataDifficulty): string => {
   switch (difficulty) {
-    case KataDifficulty.Value1:
+    case KataDifficulty._1:
       return 'FifthKyu';
-    case KataDifficulty.Value2:
+    case KataDifficulty._2:
       return 'FourthKyu';
-    case KataDifficulty.Value3:
+    case KataDifficulty._3:
       return 'ThirdKyu';
-    case KataDifficulty.Value4:
+    case KataDifficulty._4:
       return 'SecondKyu';
-    case KataDifficulty.Value5:
+    case KataDifficulty._5:
       return 'FirstKyu';
-    case KataDifficulty.Value6:
+    case KataDifficulty._6:
       return 'FirstDan';
-    case KataDifficulty.Value7:
+    case KataDifficulty._7:
       return 'SecondDan';
-    case KataDifficulty.Value20:
+    case KataDifficulty._20:
       return 'Master';
     default:
       return 'Unknown';
@@ -25,13 +26,13 @@ export const getDifficultyLabel = (difficulty: KataDifficulty): string => {
 
 export const getLanguageLabel = (language: ProgrammingLanguage): string => {
   switch (language) {
-    case ProgrammingLanguage.Value1:
+    case ProgrammingLanguage._1:
       return 'C++';
-    case ProgrammingLanguage.Value2:
+    case ProgrammingLanguage._2:
       return 'C#';
-    case ProgrammingLanguage.Value3:
+    case ProgrammingLanguage._3:
       return 'Python';
-    case ProgrammingLanguage.Value4:
+    case ProgrammingLanguage._4:
       return 'Java';
     default:
       return 'Unknown';
@@ -40,11 +41,11 @@ export const getLanguageLabel = (language: ProgrammingLanguage): string => {
 
 export const getKataTypeLabel = (type: KataType): string => {
   switch (type) {
-    case KataType.Value1:
+    case KataType._1:
       return 'Code Reading';
-    case KataType.Value2:
+    case KataType._2:
       return 'Bug Finding';
-    case KataType.Value3:
+    case KataType._3:
       return 'Code Optimization';
     default:
       return 'Unknown';
@@ -53,15 +54,32 @@ export const getKataTypeLabel = (type: KataType): string => {
 
 export const getPrismLanguage = (language: ProgrammingLanguage): string => {
   switch (language) {
-    case ProgrammingLanguage.Value1:
+    case ProgrammingLanguage._1:
       return 'cpp';
-    case ProgrammingLanguage.Value2:
+    case ProgrammingLanguage._2:
       return 'csharp';
-    case ProgrammingLanguage.Value3:
+    case ProgrammingLanguage._3:
       return 'python';
-    case ProgrammingLanguage.Value4:
+    case ProgrammingLanguage._4:
       return 'java';
     default:
       return 'clike';
   }
-}; 
+};
+
+export function getMentorAvailabilityLabel(availability: MentorAvailability): string {
+  switch (availability) {
+    case 0: // OneHourPerWeek
+      return '1 час в неделю';
+    case 1: // TwoHoursPerWeek
+      return '2 часа в неделю';
+    case 2: // ThreeHoursPerWeek
+      return '3 часа в неделю';
+    case 3: // FourHoursPerWeek
+      return '4 часа в неделю';
+    case 4: // MoreHoursPerWeek
+      return 'Более 4 часов в неделю';
+    default:
+      return 'Неизвестно';
+  }
+} 

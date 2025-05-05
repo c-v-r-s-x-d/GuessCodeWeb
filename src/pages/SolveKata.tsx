@@ -12,7 +12,7 @@ import 'prismjs/components/prism-csharp';
 import 'prismjs/components/prism-python';
 import 'prismjs/components/prism-java';
 import { apiClient } from '../services/apiClient';
-import { KataDto, KataCodeReadingAnswerDto, KataCodeReadingSolveResultDto } from '../services/api.generated';
+import { KataDto, KataCodeReadingAnswerDto, KataCodeReadingSolveResultDto, IKataCodeReadingAnswerDto } from '../services/api.generated';
 import { getDifficultyLabel, getLanguageLabel, getKataTypeLabel, getPrismLanguage } from '../utils/enumHelpers';
 import { Link } from 'react-router-dom';
 
@@ -23,6 +23,7 @@ export default function SolveKata() {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [result, setResult] = useState<KataCodeReadingSolveResultDto | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -32,31 +33,38 @@ export default function SolveKata() {
 
   const loadKata = async (kataId: number) => {
     try {
-      const response = await apiClient.api.kataSearchDetail(kataId);
-      setKata(response.data);
+      const response = await apiClient.kataSearch(kataId);
+      setKata(response);
       Prism.highlightAll();
     } catch (error) {
       console.error('Error loading kata:', error);
     }
   };
 
-  const handleSubmit = async () => {
-    if (!id || selectedOption === null) return;
-    
+  const handleSubmit = async (answerData: { kataId: number; optionId: number }) => {
+    if (!kata) return;
+
     setIsSubmitting(true);
     try {
-      const answer: KataCodeReadingAnswerDto = {
-        kataId: parseInt(id),
-        optionId: selectedOption
+      const validateAnswer = () => {
+        if (!answerData.kataId || !answerData.optionId) {
+          throw new Error('Не все поля заполнены');
+        }
       };
+
+      validateAnswer();
+
+      const answer = new KataCodeReadingAnswerDto();
+      answer.kataId = answerData.kataId;
+      answer.optionId = answerData.optionId;
+      answer.toJSON();
+      const response = await apiClient.codeReading(answer);
+      setResult(response);
       
-      const response = await apiClient.api.kataSolveCodeReadingUpdate(answer);
-      setResult(response.data);
-      
-      if (response.data.isAnswerCorrect) {
+      if (response.isAnswerCorrect) {
         alert('Правильный ответ!');
       } else {
-        alert(response.data.error || 'Неправильный ответ. Попробуйте еще раз.');
+        alert(response.error || 'Неправильный ответ. Попробуйте еще раз.');
       }
     } catch (error) {
       console.error('Error submitting solution:', error);
@@ -134,7 +142,7 @@ export default function SolveKata() {
             ))}
             
             <button
-              onClick={handleSubmit}
+              onClick={() => handleSubmit({ kataId: parseInt(id!), optionId: selectedOption! })}
               disabled={selectedOption === null || isSubmitting}
               className={`w-full py-3 mt-6 rounded-lg text-white font-semibold transition-colors
                 ${selectedOption === null || isSubmitting

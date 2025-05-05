@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { ActivityStatus, ContentType } from '../services/api.generated';
+import { ActivityStatus } from '../services/api.generated';
 import { apiClient } from '../services/apiClient';
 import { tokenService } from '../services/tokenService';
 
@@ -15,7 +15,7 @@ export default function Profile() {
     if (!file || !user?.userId) return;
     setUploading(true);
     try {
-      await apiClient.api.profileInfoAvatarCreate({ file });
+      await apiClient.avatar({ data: file, fileName: file.name });
     } catch {
       alert('Ошибка загрузки аватара');
     } finally {
@@ -34,11 +34,11 @@ export default function Profile() {
 
   const getStatusColor = (status: ActivityStatus) => {
     switch (status) {
-      case ActivityStatus.Value1:
+      case 1:
         return 'bg-gray-500'; // offline
-      case ActivityStatus.Value2:
+      case 2:
         return 'bg-yellow-400'; // away
-      case ActivityStatus.Value3:
+      case 3:
         return 'bg-green-700'; // online
       default:
         return 'bg-gray-500';
@@ -47,11 +47,11 @@ export default function Profile() {
 
   const getStatusText = (status: ActivityStatus) => {
     switch (status) {
-      case ActivityStatus.Value1:
+      case 1:
         return 'Offline';
-      case ActivityStatus.Value2:
+      case 2:
         return 'Away';
-      case ActivityStatus.Value3:
+      case 3:
         return 'Online';
       default:
         return 'Unknown';
@@ -216,11 +216,11 @@ export default function Profile() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-500">Учеников</p>
-                    <p className="text-xl font-bold">5</p>
+                    <p className="text-xl font-bold">-</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Сессий проведено</p>
-                    <p className="text-xl font-bold">24</p>
+                    <p className="text-xl font-bold">-</p>
                   </div>
                 </div>
               </div>
@@ -243,9 +243,9 @@ export default function Profile() {
                 className="w-16 h-16 rounded-full"
               />
               <div>
-                <p className="font-medium">Иван Иванов</p>
-                <p className="text-sm text-gray-500">Senior Developer</p>
-                <p className="text-sm text-gray-500">Опыт: 5 лет</p>
+                <p className="font-medium">-</p>
+                <p className="text-sm text-gray-500">-</p>
+                <p className="text-sm text-gray-500">-</p>
               </div>
             </div>
           </div>

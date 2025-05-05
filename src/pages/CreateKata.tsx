@@ -2,65 +2,121 @@ import React, { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../services/apiClient';
-import { KataDto, ProgrammingLanguage, KataDifficulty, KataType } from '../services/api.generated';
+import { KataDto, ProgrammingLanguage, KataDifficulty, KataType, KataJsonContent, AnswerOption } from '../services/api.generated';
 import { getDifficultyLabel, getLanguageLabel, getKataTypeLabel } from '../utils/enumHelpers';
 import { PlusIcon, TrashIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 
-interface CodeReadingFormProps {
+interface FormProps {
   formData: KataDto;
-  setFormData: React.Dispatch<React.SetStateAction<KataDto>>;
-  theme: string;
+  setFormData: (data: KataDto) => void;
+  theme: 'dark' | 'light';
 }
 
+interface CodeReadingFormProps extends FormProps {}
+interface BugFindingFormProps extends FormProps {}
+interface CodeOptimizationFormProps extends FormProps {}
+
 const CodeReadingForm: React.FC<CodeReadingFormProps> = ({ formData, setFormData, theme }) => {
+  const handleSourceCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const updatedContent = KataJsonContent.fromJS({
+      ...formData.kataJsonContent,
+      sourceCode: e.target.value
+    });
+
+    const updatedFormData = KataDto.fromJS({
+      ...formData,
+      kataJsonContent: updatedContent
+    });
+
+    setFormData(updatedFormData);
+  };
+
+  const handleAnswerOptionChange = (index: number, field: keyof AnswerOption, value: any) => {
+    const updatedOptions = [...(formData.kataJsonContent?.answerOptions || [])];
+    updatedOptions[index] = AnswerOption.fromJS({
+      ...updatedOptions[index],
+      [field]: value
+    });
+
+    const updatedContent = KataJsonContent.fromJS({
+      ...formData.kataJsonContent,
+      answerOptions: updatedOptions
+    });
+
+    const updatedFormData = KataDto.fromJS({
+      ...formData,
+      kataJsonContent: updatedContent
+    });
+
+    setFormData(updatedFormData);
+  };
+
   const addAnswerOption = () => {
-    const newOption = {
+    const newOption = AnswerOption.fromJS({
       optionId: (formData.kataJsonContent?.answerOptions?.length || 0) + 1,
       option: '',
       isCorrect: false
-    };
-    setFormData({
-      ...formData,
-      kataJsonContent: {
-        ...formData.kataJsonContent,
-        answerOptions: [...(formData.kataJsonContent?.answerOptions || []), newOption]
-      }
     });
+
+    const updatedContent = KataJsonContent.fromJS({
+      ...formData.kataJsonContent,
+      answerOptions: [...(formData.kataJsonContent?.answerOptions || []), newOption]
+    });
+
+    const updatedFormData = KataDto.fromJS({
+      ...formData,
+      kataJsonContent: updatedContent
+    });
+
+    setFormData(updatedFormData);
   };
 
-  const removeAnswerOption = (optionId: number) => {
-    setFormData({
-      ...formData,
-      kataJsonContent: {
-        ...formData.kataJsonContent,
-        answerOptions: formData.kataJsonContent?.answerOptions?.filter(opt => opt.optionId !== optionId)
-      }
+  const removeAnswerOption = (index: number) => {
+    const updatedOptions = [...(formData.kataJsonContent?.answerOptions || [])];
+    updatedOptions.splice(index, 1);
+
+    const updatedContent = KataJsonContent.fromJS({
+      ...formData.kataJsonContent,
+      answerOptions: updatedOptions
     });
+
+    const updatedFormData = KataDto.fromJS({
+      ...formData,
+      kataJsonContent: updatedContent
+    });
+
+    setFormData(updatedFormData);
   };
 
   const toggleCorrectAnswer = (optionId: number) => {
-    setFormData({
-      ...formData,
-      kataJsonContent: {
-        ...formData.kataJsonContent,
-        answerOptions: formData.kataJsonContent?.answerOptions?.map(opt => ({
+    const updatedContent = new KataJsonContent({
+      ...formData.kataJsonContent,
+      answerOptions: formData.kataJsonContent?.answerOptions?.map(opt => 
+        new AnswerOption({
           ...opt,
           isCorrect: opt.optionId === optionId
-        }))
-      }
+        })
+      )
     });
+
+    setFormData(new KataDto({
+      ...formData,
+      kataJsonContent: updatedContent
+    }));
   };
 
   const updateAnswerOption = (optionId: number, value: string) => {
-    setFormData({
-      ...formData,
-      kataJsonContent: {
-        ...formData.kataJsonContent,
-        answerOptions: formData.kataJsonContent?.answerOptions?.map(opt =>
-          opt.optionId === optionId ? { ...opt, option: value } : opt
-        )
-      }
+    const updatedContent = new KataJsonContent({
+      ...formData.kataJsonContent,
+      answerOptions: formData.kataJsonContent?.answerOptions?.map(opt =>
+        opt.optionId === optionId ? new AnswerOption({ ...opt, option: value }) : opt
+      )
     });
+
+    setFormData(new KataDto({
+      ...formData,
+      kataJsonContent: updatedContent
+    }));
   };
 
   return (
@@ -68,11 +124,11 @@ const CodeReadingForm: React.FC<CodeReadingFormProps> = ({ formData, setFormData
       <div>
         <label className={`block text-sm font-medium mb-1
           ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-          Initial Code
+          Source Code
         </label>
         <textarea
-          value={formData.kataJsonContent.sourceCode}
-          onChange={(e) => setFormData({...formData, kataJsonContent: {...formData.kataJsonContent, sourceCode: e.target.value}})}
+          value={formData.kataJsonContent?.sourceCode}
+          onChange={handleSourceCodeChange}
           rows={8}
           className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2
             ${theme === 'dark' 
@@ -92,44 +148,42 @@ const CodeReadingForm: React.FC<CodeReadingFormProps> = ({ formData, setFormData
             type="button"
             onClick={addAnswerOption}
             className={`px-3 py-1 rounded-lg text-sm
-              ${theme === 'dark' 
-                ? 'bg-primary-dark text-white hover:bg-primary-dark/90' 
-                : 'bg-primary text-white hover:bg-primary/90'}`}
+              ${theme === 'dark' ? 'bg-primary-dark' : 'bg-primary'}`}
           >
-            <PlusIcon className="h-4 w-4 inline-block mr-1" />
             Add Option
           </button>
         </div>
 
-        {formData.kataJsonContent.answerOptions?.map((option) => (
+        {formData.kataJsonContent?.answerOptions?.map((option, index) => (
           <div key={option.optionId} className="flex items-center gap-2 mb-2">
             <input
               type="text"
               value={option.option}
-              onChange={(e) => updateAnswerOption(option.optionId, e.target.value)}
+              onChange={(e) => handleAnswerOptionChange(index, 'option', e.target.value)}
               className={`flex-1 px-3 py-2 rounded-lg focus:outline-none focus:ring-2
                 ${theme === 'dark' 
                   ? 'bg-background-dark border-gray-700 text-text-dark focus:ring-primary-dark' 
                   : 'border-gray-300 text-text-light focus:ring-primary'}`}
+              placeholder="Enter answer option"
               required
+            />
+            <input
+              type="checkbox"
+              checked={option.isCorrect}
+              onChange={(e) => handleAnswerOptionChange(index, 'isCorrect', e.target.checked)}
+              className={`h-4 w-4 rounded
+                ${theme === 'dark' ? 'text-primary-dark' : 'text-primary'}`}
             />
             <button
               type="button"
-              onClick={() => toggleCorrectAnswer(option.optionId)}
-              className={`p-2 rounded-lg
-                ${option.isCorrect 
-                  ? theme === 'dark' ? 'bg-green-600' : 'bg-green-500'
-                  : theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'}`}
-            >
-              <CheckCircleIcon className="h-5 w-5 text-white" />
-            </button>
-            <button
-              type="button"
-              onClick={() => removeAnswerOption(option.optionId)}
+              onClick={() => removeAnswerOption(index)}
               className={`p-2 rounded-lg
                 ${theme === 'dark' ? 'bg-red-600' : 'bg-red-500'}`}
             >
-              <TrashIcon className="h-5 w-5 text-white" />
+              <span className="sr-only">Remove option</span>
+              <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
         ))}
@@ -138,28 +192,26 @@ const CodeReadingForm: React.FC<CodeReadingFormProps> = ({ formData, setFormData
   );
 };
 
-interface BugFindingFormProps {
-  formData: KataDto;
-  setFormData: React.Dispatch<React.SetStateAction<KataDto>>;
-  theme: string;
-}
-
 const BugFindingForm: React.FC<BugFindingFormProps> = ({ formData, setFormData, theme }) => {
+  const handleSourceCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const updatedContent = KataJsonContent.fromJS({
+      ...formData.kataJsonContent,
+      sourceCode: e.target.value
+    });
+
+    const updatedFormData = KataDto.fromJS({
+      ...formData,
+      kataJsonContent: updatedContent
+    });
+
+    setFormData(updatedFormData);
+  };
+
   const handleTestFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const content = event.target?.result as string;
-        setFormData({
-          ...formData,
-          kataJsonContent: {
-            ...formData.kataJsonContent,
-            sourceCode: content
-          }
-        });
-      };
-      reader.readAsText(file);
+      // Просто сохраняем файл, не читаем его содержимое
+      console.log('File selected:', file.name);
     }
   };
 
@@ -168,11 +220,11 @@ const BugFindingForm: React.FC<BugFindingFormProps> = ({ formData, setFormData, 
       <div>
         <label className={`block text-sm font-medium mb-1
           ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-          Initial Code
+          Source Code
         </label>
         <textarea
-          value={formData.kataJsonContent.sourceCode}
-          onChange={(e) => setFormData({...formData, kataJsonContent: {...formData.kataJsonContent, sourceCode: e.target.value}})}
+          value={formData.kataJsonContent?.sourceCode}
+          onChange={handleSourceCodeChange}
           rows={8}
           className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2
             ${theme === 'dark' 
@@ -202,12 +254,6 @@ const BugFindingForm: React.FC<BugFindingFormProps> = ({ formData, setFormData, 
   );
 };
 
-interface CodeOptimizationFormProps {
-  formData: KataDto;
-  setFormData: React.Dispatch<React.SetStateAction<KataDto>>;
-  theme: string;
-}
-
 const CodeOptimizationForm: React.FC<CodeOptimizationFormProps> = ({ formData, setFormData, theme }) => {
   const [languages, setLanguages] = useState<{
     [key: number]: { timeLimit: number; memoryLimit: number }
@@ -235,21 +281,25 @@ const CodeOptimizationForm: React.FC<CodeOptimizationFormProps> = ({ formData, s
     }));
   };
 
+  const handleSourceCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const updatedContent = KataJsonContent.fromJS({
+      ...formData.kataJsonContent,
+      sourceCode: e.target.value
+    });
+
+    const updatedFormData = KataDto.fromJS({
+      ...formData,
+      kataJsonContent: updatedContent
+    });
+
+    setFormData(updatedFormData);
+  };
+
   const handleTestFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const content = event.target?.result as string;
-        setFormData({
-          ...formData,
-          kataJsonContent: {
-            ...formData.kataJsonContent,
-            testCases: content
-          }
-        });
-      };
-      reader.readAsText(file);
+      // Просто сохраняем файл, не читаем его содержимое
+      console.log('File selected:', file.name);
     }
   };
 
@@ -258,11 +308,11 @@ const CodeOptimizationForm: React.FC<CodeOptimizationFormProps> = ({ formData, s
       <div>
         <label className={`block text-sm font-medium mb-1
           ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-          Initial Code
+          Source Code
         </label>
         <textarea
-          value={formData.kataJsonContent.sourceCode}
-          onChange={(e) => setFormData({...formData, kataJsonContent: {...formData.kataJsonContent, sourceCode: e.target.value}})}
+          value={formData.kataJsonContent?.sourceCode}
+          onChange={handleSourceCodeChange}
           rows={8}
           className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2
             ${theme === 'dark' 
@@ -363,202 +413,257 @@ const CodeOptimizationForm: React.FC<CodeOptimizationFormProps> = ({ formData, s
   );
 };
 
-export default function CreateKata() {
+const CreateKata: React.FC = () => {
   const { theme } = useTheme();
-  const navigate = useNavigate();
   const userId = Number(localStorage.getItem('userId'));
 
-  const [formData, setFormData] = useState<KataDto>({
-    title: '',
-    programmingLanguage: ProgrammingLanguage.Value1,
-    kataDifficulty: KataDifficulty.Value1,
-    kataType: KataType.Value1,
-    authorId: userId,
-    kataJsonContent: {
-      kataDescription: '',
-      sourceCode: '',
-      answerOptions: []
-    }
+  const initialKataJsonContent = KataJsonContent.fromJS({
+    kataDescription: '',
+    sourceCode: '',
+    answerOptions: []
   });
 
-  const validateForm = () => {
-    switch (formData.kataType) {
-      case KataType.Value1: // Code Reading
-        const options = formData.kataJsonContent?.answerOptions || [];
-        if (options.length < 2) {
-          alert('Please add at least 2 answer options');
-          return false;
-        }
-        if (!options.some(opt => opt.isCorrect)) {
-          alert('Please mark at least one answer as correct');
-          return false;
-        }
-        break;
-      case KataType.Value2: // Bug Finding
-        if (!formData.kataJsonContent?.sourceCode) {
-          alert('Please upload a test file');
-          return false;
-        }
-        break;
-      case KataType.Value3: // Code Optimization
-        if (!formData.kataJsonContent?.sourceCode) {
-          alert('Please provide initial code');
-          return false;
-        }
-        break;
-    }
-    return true;
-  };
+  const initialFormData = KataDto.fromJS({
+    title: '',
+    programmingLanguage: ProgrammingLanguage._1,
+    kataDifficulty: KataDifficulty._1,
+    kataType: KataType._1,
+    kataJsonContent: initialKataJsonContent,
+    authorId: userId,
+    memoryLimits: {},
+    timeLimits: {}
+  });
+
+  const [formData, setFormData] = useState<KataDto>(initialFormData);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    
     try {
-      await apiClient.api.kataAdministrationCreate(formData);
-      navigate('/challenges');
+      // Создаем объект с данными ката
+      const kataData = KataDto.fromJS({
+        title: formData.title,
+        programmingLanguage: formData.programmingLanguage,
+        kataDifficulty: formData.kataDifficulty,
+        kataType: formData.kataType,
+        kataJsonContent: KataJsonContent.fromJS({
+          kataDescription: formData.kataJsonContent?.kataDescription,
+          sourceCode: formData.kataJsonContent?.sourceCode,
+          answerOptions: formData.kataJsonContent?.answerOptions?.map(opt => 
+            AnswerOption.fromJS({
+              optionId: opt.optionId,
+              option: opt.option,
+              isCorrect: opt.isCorrect
+            })
+          )
+        }),
+        authorId: userId,
+        // Добавляем лимиты только для BugFinding и CodeOptimization
+        ...(formData.kataType !== KataType._1 && {
+          memoryLimits: formData.memoryLimits,
+          timeLimits: formData.timeLimits
+        })
+      });
+
+      // Преобразуем объект в JSON строку
+      const kataDtoRaw = JSON.stringify(kataData.toJSON());
+
+      // Добавляем файл, если он есть
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      const file = fileInput?.files?.[0];
+
+      await apiClient.kataAdministrationPOST(kataDtoRaw, file ? {
+        data: file,
+        fileName: file.name
+      } : undefined);
+
+      alert('Ката успешно создана!');
     } catch (error) {
       console.error('Error creating kata:', error);
+      alert('Ошибка при создании ката');
     }
   };
 
-  const renderFormByType = () => {
-    switch (formData.kataType) {
-      case KataType.Value1:
-        return <CodeReadingForm formData={formData} setFormData={setFormData} theme={theme} />;
-      case KataType.Value2:
-        return <BugFindingForm formData={formData} setFormData={setFormData} theme={theme} />;
-      case KataType.Value3:
-        return <CodeOptimizationForm formData={formData} setFormData={setFormData} theme={theme} />;
-      default:
-        return null;
-    }
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const updatedFormData = KataDto.fromJS({
+      ...formData,
+      title: e.target.value
+    });
+    setFormData(updatedFormData);
+  };
+
+  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const updatedFormData = KataDto.fromJS({
+      ...formData,
+      kataType: Number(e.target.value) as KataType
+    });
+    setFormData(updatedFormData);
+  };
+
+  const handleDifficultyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const updatedFormData = KataDto.fromJS({
+      ...formData,
+      kataDifficulty: Number(e.target.value) as KataDifficulty
+    });
+    setFormData(updatedFormData);
+  };
+
+  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const updatedFormData = KataDto.fromJS({
+      ...formData,
+      programmingLanguage: Number(e.target.value) as ProgrammingLanguage
+    });
+    setFormData(updatedFormData);
+  };
+
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const updatedContent = KataJsonContent.fromJS({
+      ...formData.kataJsonContent,
+      kataDescription: e.target.value
+    });
+
+    const updatedFormData = KataDto.fromJS({
+      ...formData,
+      kataJsonContent: updatedContent
+    });
+    setFormData(updatedFormData);
   };
 
   return (
-    <div className="container mx-auto px-4 max-w-4xl">
-      <h1 className={`text-3xl font-bold mb-8 
-        ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className={`text-2xl font-bold mb-6
+        ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>
         Create New Kata
       </h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className={`p-6 rounded-lg shadow-md
-          ${theme === 'dark' ? 'bg-surface-dark' : 'bg-white'}`}>
-          <div className="space-y-4">
-            <div>
-              <label className={`block text-sm font-medium mb-1
-                ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                Title
-              </label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) => setFormData({...formData, title: e.target.value})}
-                className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2
-                  ${theme === 'dark' 
-                    ? 'bg-background-dark border-gray-700 text-text-dark focus:ring-primary-dark' 
-                    : 'border-gray-300 text-text-light focus:ring-primary'}`}
-                required
-              />
-            </div>
+        <div>
+          <label className={`block text-sm font-medium mb-1
+            ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+            Title
+          </label>
+          <input
+            type="text"
+            value={formData.title}
+            onChange={handleTitleChange}
+            className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2
+              ${theme === 'dark' 
+                ? 'bg-background-dark border-gray-700 text-text-dark focus:ring-primary-dark' 
+                : 'border-gray-300 text-text-light focus:ring-primary'}`}
+            required
+          />
+        </div>
 
-            <div>
-              <label className={`block text-sm font-medium mb-1
-                ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                Type
-              </label>
-              <select
-                value={formData.kataType}
-                onChange={(e) => setFormData({...formData, kataType: Number(e.target.value) as KataType})}
-                className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2
-                  ${theme === 'dark' 
-                    ? 'bg-background-dark border-gray-700 text-text-dark focus:ring-primary-dark' 
-                    : 'border-gray-300 text-text-light focus:ring-primary'}`}
-              >
-                {Object.entries(KataType)
-                  .filter(([key]) => !isNaN(Number(key)))
-                  .map(([key, value]) => (
-                    <option key={key} value={key}>
-                      {getKataTypeLabel(Number(key) as KataType)}
-                    </option>
-                  ))}
-              </select>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className={`block text-sm font-medium mb-1
+              ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+              Type
+            </label>
+            <select
+              value={formData.kataType}
+              onChange={handleTypeChange}
+              className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2
+                ${theme === 'dark' 
+                  ? 'bg-background-dark border-gray-700 text-text-dark focus:ring-primary-dark' 
+                  : 'border-gray-300 text-text-light focus:ring-primary'}`}
+              required
+            >
+              {Object.values(KataType)
+                .filter(value => typeof value === 'number')
+                .map(value => (
+                  <option key={value} value={value}>
+                    {getKataTypeLabel(value as KataType)}
+                  </option>
+                ))}
+            </select>
+          </div>
 
-            <div>
-              <label className={`block text-sm font-medium mb-1
-                ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                Difficulty
-              </label>
-              <select
-                value={formData.kataDifficulty}
-                onChange={(e) => setFormData({...formData, kataDifficulty: Number(e.target.value) as KataDifficulty})}
-                className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2
-                  ${theme === 'dark' 
-                    ? 'bg-background-dark border-gray-700 text-text-dark focus:ring-primary-dark' 
-                    : 'border-gray-300 text-text-light focus:ring-primary'}`}
-              >
-                {Object.entries(KataDifficulty)
-                  .filter(([key]) => !isNaN(Number(key)))
-                  .map(([key, value]) => (
-                    <option key={key} value={key}>
-                      {getDifficultyLabel(Number(key) as KataDifficulty)}
-                    </option>
-                  ))}
-              </select>
-            </div>
+          <div>
+            <label className={`block text-sm font-medium mb-1
+              ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+              Difficulty
+            </label>
+            <select
+              value={formData.kataDifficulty}
+              onChange={handleDifficultyChange}
+              className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2
+                ${theme === 'dark' 
+                  ? 'bg-background-dark border-gray-700 text-text-dark focus:ring-primary-dark' 
+                  : 'border-gray-300 text-text-light focus:ring-primary'}`}
+              required
+            >
+              {Object.values(KataDifficulty)
+                .filter(value => typeof value === 'number')
+                .map(value => (
+                  <option key={value} value={value}>
+                    {getDifficultyLabel(value as KataDifficulty)}
+                  </option>
+                ))}
+            </select>
+          </div>
 
-            <div>
-              <label className={`block text-sm font-medium mb-1
-                ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                Programming Language
-              </label>
-              <select
-                value={formData.programmingLanguage}
-                onChange={(e) => setFormData({...formData, programmingLanguage: Number(e.target.value) as ProgrammingLanguage})}
-                className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2
-                  ${theme === 'dark' 
-                    ? 'bg-background-dark border-gray-700 text-text-dark focus:ring-primary-dark' 
-                    : 'border-gray-300 text-text-light focus:ring-primary'}`}
-              >
-                {Object.entries(ProgrammingLanguage)
-                  .filter(([key]) => !isNaN(Number(key)))
-                  .map(([key, value]) => (
-                    <option key={key} value={key}>
-                      {getLanguageLabel(Number(key) as ProgrammingLanguage)}
-                    </option>
-                  ))}
-              </select>
-            </div>
-
-            <div>
-              <label className={`block text-sm font-medium mb-1
-                ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                Description (Markdown supported)
-              </label>
-              <textarea
-                value={formData.kataJsonContent.kataDescription}
-                onChange={(e) => setFormData({...formData, kataJsonContent: {...formData.kataJsonContent, kataDescription: e.target.value}})}
-                rows={6}
-                className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2
-                  ${theme === 'dark' 
-                    ? 'bg-background-dark border-gray-700 text-text-dark focus:ring-primary-dark' 
-                    : 'border-gray-300 text-text-light focus:ring-primary'}`}
-                required
-              />
-            </div>
-
-            {renderFormByType()}
+          <div>
+            <label className={`block text-sm font-medium mb-1
+              ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+              Programming Language
+            </label>
+            <select
+              value={formData.programmingLanguage}
+              onChange={handleLanguageChange}
+              className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2
+                ${theme === 'dark' 
+                  ? 'bg-background-dark border-gray-700 text-text-dark focus:ring-primary-dark' 
+                  : 'border-gray-300 text-text-light focus:ring-primary'}`}
+              required
+            >
+              {Object.values(ProgrammingLanguage)
+                .filter(value => typeof value === 'number')
+                .map(value => (
+                  <option key={value} value={value}>
+                    {getLanguageLabel(value as ProgrammingLanguage)}
+                  </option>
+                ))}
+            </select>
           </div>
         </div>
+
+        <div>
+          <label className={`block text-sm font-medium mb-1
+            ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+            Description
+          </label>
+          <textarea
+            value={formData.kataJsonContent?.kataDescription}
+            onChange={handleDescriptionChange}
+            rows={6}
+            className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2
+              ${theme === 'dark' 
+                ? 'bg-background-dark border-gray-700 text-text-dark focus:ring-primary-dark' 
+                : 'border-gray-300 text-text-light focus:ring-primary'}`}
+            required
+          />
+        </div>
+
+        {formData.kataType === KataType._1 && (
+          <CodeReadingForm formData={formData} setFormData={setFormData} theme={theme} />
+        )}
+
+        {formData.kataType === KataType._2 && (
+          <BugFindingForm formData={formData} setFormData={setFormData} theme={theme} />
+        )}
+
+        {formData.kataType === KataType._3 && (
+          <CodeOptimizationForm formData={formData} setFormData={setFormData} theme={theme} />
+        )}
 
         <div className="flex justify-end">
           <button
             type="submit"
-            className={`px-6 py-2 rounded-lg font-medium
+            className={`px-4 py-2 rounded-lg text-white
               ${theme === 'dark' 
-                ? 'bg-primary-dark text-white hover:bg-primary-dark/90' 
-                : 'bg-primary text-white hover:bg-primary/90'}`}
+                ? 'bg-primary-dark hover:bg-primary-dark/90' 
+                : 'bg-primary hover:bg-primary/90'}`}
           >
             Create Kata
           </button>
@@ -566,4 +671,6 @@ export default function CreateKata() {
       </form>
     </div>
   );
-} 
+};
+
+export default CreateKata; 

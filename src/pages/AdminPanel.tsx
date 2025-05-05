@@ -1,14 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { ShieldCheckIcon, UserIcon, CodeBracketIcon, LockClosedIcon } from '@heroicons/react/24/outline';
+import { apiClient } from '../services/apiClient';
+import { MentorDto, KataDto } from '../services/api.generated';
+import LoadingSpinner from '../components/common/LoadingSpinner';
+import { getLanguageLabel } from '../utils/enumHelpers';
 
 type TabType = 'mentors' | 'users' | 'katas' | 'reports';
 
 interface Tab {
   id: TabType;
   name: string;
-  icon: React.ElementType;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
 }
 
 const tabs: Tab[] = [
@@ -22,28 +26,202 @@ export default function AdminPanel() {
   const { theme } = useTheme();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('mentors');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [mentors, setMentors] = useState<MentorDto[]>([]);
+  const [pendingKatas, setPendingKatas] = useState<KataDto[]>([]);
 
-  // Временное решение - захардкоженная проверка на администратора
-  const isAdmin = true;
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      try {
+        // TODO: Добавить API для проверки статуса администратора
+        // const response = await apiClient.api.checkAdminStatus();
+        // setIsAdmin(response.data.isAdmin);
+        setIsAdmin(true); // Временное решение
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        setIsAdmin(false);
+      }
+    };
+
+    checkAdminStatus();
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!isAdmin) return;
+      
+      setIsLoading(true);
+      try {
+        const [mentorsResponse, katasResponse] = await Promise.all([
+          apiClient.pendingMentorsAll(),
+          apiClient.pendingKatasAll()
+        ]);
+        setMentors(mentorsResponse);
+        setPendingKatas(katasResponse);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [isAdmin]);
+
+  const handleMentorAction = async (mentorId: number, isApproved: boolean) => {
+    try {
+      await apiClient.pendingMentors(mentorId, isApproved);
+      setMentors(mentors);
+    } catch (error) {
+      console.error('Error handling mentor action:', error);
+      alert('Произошла ошибка при обработке запроса ментора');
+    }
+  };
+
+  const handleKataAction = async (kataId: number, isApproved: boolean) => {
+    try {
+      await apiClient.pendingKatas(kataId, isApproved);
+      setPendingKatas(pendingKatas.filter(kata => kata.id !== kataId));
+    } catch (error) {
+      console.error('Error handling kata action:', error);
+      alert('Произошла ошибка при обработке каты');
+    }
+  };
 
   if (!isAdmin) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <p className={`text-lg ${theme === 'dark' ? 'text-red-400' : 'text-red-600'}`}>
+      <div className="container mx-auto px-4 py-8">
+        <div className={`p-4 rounded-lg text-center
+          ${theme === 'dark' ? 'bg-red-900/30 text-red-200' : 'bg-red-50 text-red-800'}`}>
           У вас нет доступа к панели администратора
-        </p>
+        </div>
       </div>
     );
+  }
+
+  if (isLoading) {
+    return <LoadingSpinner />;
   }
 
   const renderTabContent = () => {
     switch (activeTab) {
       case 'mentors':
-        return <MentorsTab />;
+        return (
+          <div>
+            <h2 className={`text-xl font-semibold mb-4
+              ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
+              Запросы на менторство
+            </h2>
+            {mentors.length === 0 ? (
+              <p className={`text-center py-4
+                ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                Нет новых запросов на менторство
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {mentors.map((mentor) => (
+                  <div key={mentor.userId} className={`p-4 rounded-lg border
+                    ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className={`font-medium
+                          ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
+                          ID пользователя: {mentor.userId}
+                        </h3>
+                        <p className={`mt-1
+                          ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Опыт: {mentor.experience} лет
+                        </p>
+                        <p className={`mt-1
+                          ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Языки программирования: {mentor.programmingLanguages?.map(lang => getLanguageLabel(lang)).join(', ')}
+                        </p>
+                        <p className={`mt-1
+                          ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                          О себе: {mentor.about}
+                        </p>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleMentorAction(mentor.id!, true)}
+                          className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                        >
+                          Одобрить
+                        </button>
+                        <button
+                          onClick={() => handleMentorAction(mentor.id!, false)}
+                          className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                        >
+                          Отклонить
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
       case 'users':
         return <UsersTab />;
       case 'katas':
-        return <KatasTab />;
+        return (
+          <div>
+            <h2 className={`text-xl font-semibold mb-4
+              ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
+              Каты на согласование
+            </h2>
+            {pendingKatas.length === 0 ? (
+              <p className={`text-center py-4
+                ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                Нет кат, ожидающих согласования
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {pendingKatas.map((kata) => (
+                  <div key={kata.id} className={`p-4 rounded-lg border
+                    ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className={`font-medium
+                          ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
+                          {kata.title}
+                        </h3>
+                        <p className={`mt-1
+                          ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                          ID: {kata.id}
+                        </p>
+                        <p className={`mt-1
+                          ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Язык программирования: {getLanguageLabel(kata.programmingLanguage!)}
+                        </p>
+                        <p className={`mt-1
+                          ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Описание: {kata.kataJsonContent?.kataDescription}
+                        </p>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleKataAction(kata.id!, true)}
+                          className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                        >
+                          Одобрить
+                        </button>
+                        <button
+                          onClick={() => handleKataAction(kata.id!, false)}
+                          className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                        >
+                          Отклонить
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
       case 'reports':
         return <ReportsTab />;
       default:
@@ -53,142 +231,42 @@ export default function AdminPanel() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className={`text-3xl font-bold mb-8 ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
-        Панель администратора
-      </h1>
+      <div className="max-w-6xl mx-auto">
+        <h1 className={`text-3xl font-bold mb-8
+          ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
+          Панель администратора
+        </h1>
 
-      {/* Табы */}
-      <div className="mb-8">
-        <div className={`border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
-          <nav className={`-mb-px flex space-x-8 ${theme === 'dark' ? 'bg-surface-dark' : 'bg-white'}`} aria-label="Tabs">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`
-                    group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm
-                    ${activeTab === tab.id
-                      ? theme === 'dark'
-                        ? 'border-blue-500 text-blue-500'
-                        : 'border-blue-600 text-blue-600'
-                      : theme === 'dark'
-                        ? 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }
-                  `}
-                >
-                  <Icon
-                    className={`
-                      -ml-0.5 mr-2 h-5 w-5
-                      ${activeTab === tab.id
-                        ? theme === 'dark'
-                          ? 'text-blue-500'
-                          : 'text-blue-600'
-                        : theme === 'dark'
-                          ? 'text-gray-400 group-hover:text-gray-300'
-                          : 'text-gray-400 group-hover:text-gray-500'
-                      }
-                    `}
-                    aria-hidden="true"
-                  />
-                  {tab.name}
-                </button>
-              );
-            })}
-          </nav>
+        <div className="flex space-x-4 mb-6">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2 rounded-lg font-medium
+                ${activeTab === tab.id
+                  ? theme === 'dark'
+                    ? 'bg-primary-dark text-white'
+                    : 'bg-primary text-white'
+                  : theme === 'dark'
+                    ? 'bg-surface-dark text-text-dark hover:bg-surface-dark/80'
+                    : 'bg-white text-text-light hover:bg-gray-50'}`}
+            >
+              <tab.icon className="w-5 h-5 mr-2" />
+              {tab.name}
+            </button>
+          ))}
+        </div>
+
+        <div className={`rounded-lg shadow-md p-6
+          ${theme === 'dark' ? 'bg-surface-dark' : 'bg-white'}`}>
+          {renderTabContent()}
         </div>
       </div>
-
-      {/* Контент таба */}
-      <div className={`rounded-lg shadow-md p-6
-        ${theme === 'dark' ? 'bg-surface-dark' : 'bg-white'}`}>
-        {renderTabContent()}
-      </div>
     </div>
   );
 }
 
-// Компоненты для каждого таба
-function MentorsTab() {
-  const { theme } = useTheme();
-  const [mentors, setMentors] = useState([
-    { id: 1, name: 'Иван Иванов', status: 'pending', experience: '5 лет', rating: 4.8 },
-    { id: 2, name: 'Петр Петров', status: 'approved', experience: '3 года', rating: 4.5 },
-    { id: 3, name: 'Анна Сидорова', status: 'rejected', experience: '7 лет', rating: 4.9 },
-  ]);
-
-  const handleApprove = (id: number) => {
-    setMentors(mentors.map(m => 
-      m.id === id ? { ...m, status: 'approved' } : m
-    ));
-  };
-
-  const handleReject = (id: number) => {
-    setMentors(mentors.map(m => 
-      m.id === id ? { ...m, status: 'rejected' } : m
-    ));
-  };
-
-  return (
-    <div>
-      <h2 className={`text-xl font-semibold mb-4
-        ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
-        Заявки на менторство
-      </h2>
-      <div className="space-y-4">
-        {mentors.map((mentor) => (
-          <div key={mentor.id} className={`p-4 rounded-lg
-            ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
-            <div className="flex justify-between items-center">
-              <div>
-                <p className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'}`}>
-                  {mentor.name}
-                </p>
-                <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Опыт: {mentor.experience}
-                </p>
-                <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Рейтинг: {mentor.rating}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                {mentor.status === 'pending' && (
-                  <>
-                    <button
-                      onClick={() => handleApprove(mentor.id)}
-                      className="px-3 py-1 text-sm font-medium text-white bg-green-600 rounded hover:bg-green-700"
-                    >
-                      Одобрить
-                    </button>
-                    <button
-                      onClick={() => handleReject(mentor.id)}
-                      className="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700"
-                    >
-                      Отклонить
-                    </button>
-                  </>
-                )}
-                {mentor.status === 'approved' && (
-                  <span className="px-3 py-1 text-sm font-medium text-white bg-green-600 rounded">
-                    Одобрено
-                  </span>
-                )}
-                {mentor.status === 'rejected' && (
-                  <span className="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded">
-                    Отклонено
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
+// Компоненты для остальных табов
 function UsersTab() {
   const { theme } = useTheme();
   const [users, setUsers] = useState([
@@ -245,83 +323,6 @@ function UsersTab() {
                   >
                     Разблокировать
                   </button>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function KatasTab() {
-  const { theme } = useTheme();
-  const [katas, setKatas] = useState([
-    { id: 1, title: 'Two Sum', author: 'user1', status: 'pending', type: 'Algorithm' },
-    { id: 2, title: 'Code Review', author: 'user2', status: 'approved', type: 'Code Reading' },
-  ]);
-
-  const handleApprove = (id: number) => {
-    setKatas(katas.map(k => 
-      k.id === id ? { ...k, status: 'approved' } : k
-    ));
-  };
-
-  const handleReject = (id: number) => {
-    setKatas(katas.map(k => 
-      k.id === id ? { ...k, status: 'rejected' } : k
-    ));
-  };
-
-  return (
-    <div>
-      <h2 className={`text-xl font-semibold mb-4
-        ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
-        Управление катами
-      </h2>
-      <div className="space-y-4">
-        {katas.map((kata) => (
-          <div key={kata.id} className={`p-4 rounded-lg
-            ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
-            <div className="flex justify-between items-center">
-              <div>
-                <p className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'}`}>
-                  {kata.title}
-                </p>
-                <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Автор: {kata.author}
-                </p>
-                <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Тип: {kata.type}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                {kata.status === 'pending' && (
-                  <>
-                    <button
-                      onClick={() => handleApprove(kata.id)}
-                      className="px-3 py-1 text-sm font-medium text-white bg-green-600 rounded hover:bg-green-700"
-                    >
-                      Одобрить
-                    </button>
-                    <button
-                      onClick={() => handleReject(kata.id)}
-                      className="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700"
-                    >
-                      Отклонить
-                    </button>
-                  </>
-                )}
-                {kata.status === 'approved' && (
-                  <span className="px-3 py-1 text-sm font-medium text-white bg-green-600 rounded">
-                    Одобрено
-                  </span>
-                )}
-                {kata.status === 'rejected' && (
-                  <span className="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded">
-                    Отклонено
-                  </span>
                 )}
               </div>
             </div>

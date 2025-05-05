@@ -6,14 +6,14 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 
 const getRankLabel = (rank: Rank): string => {
   switch (rank) {
-    case Rank.Value1: return '1 kyu';
-    case Rank.Value2: return '2 kyu';
-    case Rank.Value3: return '3 kyu';
-    case Rank.Value4: return '4 kyu';
-    case Rank.Value5: return '5 kyu';
-    case Rank.Value6: return '6 kyu';
-    case Rank.Value7: return '7 kyu';
-    case Rank.Value20: return '8 kyu';
+    case 1: return 'Новичок';
+    case 2: return 'Ученик';
+    case 3: return 'Практик';
+    case 4: return 'Специалист';
+    case 5: return 'Эксперт';
+    case 6: return 'Мастер';
+    case 7: return 'Гранд-мастер';
+    case 20: return 'Администратор';
     default: return 'Unranked';
   }
 };
@@ -27,8 +27,8 @@ export default function Leaderboard() {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const response = await apiClient.api.leaderboardList();
-        setLeaderboard(response.data || []);
+        const response = await apiClient.leaderboard();
+        setLeaderboard(response || []);
         setError(null);
       } catch (err) {
         setError('Failed to load leaderboard data');

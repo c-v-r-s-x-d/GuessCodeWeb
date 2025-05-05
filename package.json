@@ -26,6 +26,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
+    "generate-api-nswag": "nswag openapi2tsclient /input:http://api.guess-code.ru/swagger/v1/swagger.json /output:./src/services/api.generated.ts",
     "generate-api": "npx swagger-typescript-api -p http://api.guess-code.ru/swagger/v1/swagger.json -o ./src/services -n api.generated.ts",
     "generate-api:watch": "npx swagger-typescript-api -p http://192.168.0.35:5000/swagger/v1/swagger.json -o ./src/services -n api.generated.ts --watch"
   },

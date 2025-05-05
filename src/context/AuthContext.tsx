@@ -38,12 +38,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        const response = await apiClient.api.profileInfoDetail(userId);
+        const response = await apiClient.profileInfo(userId);
         
         // Only set authenticated if we successfully get user data
-        if (response.data) {
-          setUser(response.data);
-          setIsAuthenticated(true);
+        if (response) {
+          setUser(response);
+          setIsAuthenticated(!!response);
         }
       } catch (error) {
         // Don't remove token on network errors or other temporary issues
@@ -76,9 +76,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userId = tokenService.getUserId();
       if (!userId) throw new Error('No user ID found');
 
-      const response = await apiClient.api.profileInfoDetail(userId);
-      setUser(response.data);
-      setIsAuthenticated(true);
+      const response = await apiClient.profileInfo(userId);
+      setUser(response);
+      setIsAuthenticated(!!response);
     } catch (error) {
       console.error('Error loading user:', error);
       logout();
@@ -87,8 +87,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (credentials: LoginDto) => {
     try {
-      const response = await apiClient.api.authLoginCreate(credentials);
-      const tokenData = response.data;
+      const response = await apiClient.login(credentials);
+      const tokenData = response;
       
       if (!tokenData?.accessToken || !tokenData?.userId) {
         throw new Error('Invalid token response');
@@ -106,7 +106,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const register = async (userData: RegisterDto) => {
-    await apiClient.api.authRegisterCreate(userData);
+    try {
+      await apiClient.register(userData);
+      
+      // После успешной регистрации выполняем вход
+      const loginDto = new LoginDto({
+        username: userData.username,
+        password: userData.password
+      });
+      
+      await login(loginDto);
+    } catch (error) {
+      console.error('Registration failed:', error);
+      throw error;
+    }
   };
 
   const logout = useCallback(async () => {

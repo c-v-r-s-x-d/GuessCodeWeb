@@ -68,8 +68,8 @@ export default function Navbar() {
                       ${theme === 'dark' ? 'bg-surface-dark' : 'bg-white'}`}
                     style={{ 
                       zIndex: 1000,
-                      top: 'calc(100% - 5px)',
-                      padding: '5px 0'
+                      top: '100%',
+                      marginTop: '0.5rem'
                     }}
                   >
                     <div className="py-1">

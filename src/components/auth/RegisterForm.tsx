@@ -5,6 +5,7 @@ import { useTheme } from '../../context/ThemeContext';
 import GitHubButton from './GitHubButton';
 import TelegramButton from './TelegramButton';
 import LoadingSpinner from '../common/LoadingSpinner';
+import { RegisterDto } from '../../services/api.generated';
 
 export default function RegisterForm() {
   const { theme } = useTheme();
@@ -20,10 +21,11 @@ export default function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -38,11 +40,11 @@ export default function RegisterForm() {
     }
 
     try {
-      const registerDto = {
+      const registerDto = new RegisterDto({
         username: formData.username,
         email: formData.email,
         password: formData.password
-      };
+      });
       
       await register(registerDto);
       navigate('/');
