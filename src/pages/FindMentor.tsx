@@ -6,6 +6,7 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 import { apiClient } from '../services/apiClient';
 import { MentorDto, ProgrammingLanguage } from '../services/api.generated';
 import { getLanguageLabel, getMentorAvailabilityLabel } from '../utils/enumHelpers';
+import { notify, handleApiError } from '../utils/notifications';
 
 export default function FindMentor() {
   const { theme } = useTheme();
@@ -77,20 +78,18 @@ export default function FindMentor() {
     }
   };
 
-  const handleMentorRequest = async (mentorId: number) => {
+  const handleContact = async (mentorId: number) => {
     if (!user) {
-      alert('Пожалуйста, войдите в систему, чтобы связаться с ментором');
+      notify.warning('Please login to contact a mentor');
       return;
     }
 
     try {
       setIsRequesting(mentorId);
-      setError(null);
       await apiClient.mentorRequest(mentorId);
-      alert('Запрос успешно отправлен! Ментор свяжется с вами в ближайшее время.');
+      notify.success('Request sent successfully! The mentor will contact you soon.');
     } catch (error) {
-      console.error('Error sending mentor request:', error);
-      setError('Ошибка при отправке запроса');
+      handleApiError(error);
     } finally {
       setIsRequesting(null);
     }
@@ -113,7 +112,7 @@ export default function FindMentor() {
       <div className="max-w-6xl mx-auto">
         <h1 className={`text-3xl font-bold mb-8
           ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
-          Найти ментора
+          Find a Mentor
         </h1>
 
         <div className={`rounded-lg shadow-md p-6 mb-8
@@ -123,7 +122,7 @@ export default function FindMentor() {
             <div className="space-y-4">
               <input
                 type="text"
-                placeholder="Поиск по описанию"
+                placeholder="Search by description"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-${theme}
@@ -137,7 +136,7 @@ export default function FindMentor() {
                   ${theme === 'dark' 
                     ? 'bg-background-dark border-gray-700' 
                     : 'bg-white border-gray-300'}`}>
-                  <div className="font-medium mb-2">Минимальный рейтинг:</div>
+                  <div className="font-medium mb-2">Minimum rating:</div>
                   <input
                     type="number"
                     min="0"
@@ -156,7 +155,7 @@ export default function FindMentor() {
                   ${theme === 'dark' 
                     ? 'bg-background-dark border-gray-700' 
                     : 'bg-white border-gray-300'}`}>
-                  <div className="font-medium mb-2">Минимальный опыт (лет):</div>
+                  <div className="font-medium mb-2">Minimum experience (years):</div>
                   <input
                     type="number"
                     min="0"
@@ -176,7 +175,7 @@ export default function FindMentor() {
               ${theme === 'dark' 
                 ? 'bg-background-dark border-gray-700' 
                 : 'bg-white border-gray-300'}`}>
-              <div className="font-medium mb-2">Языки программирования:</div>
+              <div className="font-medium mb-2">Programming Languages:</div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
                 {allLanguages.map(lang => (
                   <label key={lang} className="flex items-center space-x-2 cursor-pointer">
@@ -202,7 +201,7 @@ export default function FindMentor() {
                     ? 'bg-primary-dark hover:bg-blue-500' 
                     : 'bg-primary hover:bg-blue-700'}`}
               >
-                Применить фильтр
+                Apply filter
               </button>
             </div>
           </div>
@@ -220,7 +219,7 @@ export default function FindMentor() {
             </div>
           ) : filteredMentors.length === 0 ? (
             <div className={`text-center py-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-              Менторы не найдены
+              Mentors not found
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -244,13 +243,13 @@ export default function FindMentor() {
                     
                     <div className={`mb-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                       <p className="mb-2">
-                        <span className="font-medium">Опыт:</span> {mentor.experience || 0} {mentor.experience === 1 ? 'год' : 'лет'}
+                        <span className="font-medium">Experience:</span> {mentor.experience || 0} {mentor.experience === 1 ? 'year' : 'years'}
                       </p>
                       <p className="mb-2">
-                        <span className="font-medium">Доступность:</span> {getMentorAvailabilityLabel(mentor.availability || 0)}
+                        <span className="font-medium">Availability:</span> {getMentorAvailabilityLabel(mentor.availability || 0)}
                       </p>
                       <div className="mb-2">
-                        <span className="font-medium">Языки программирования:</span>
+                        <span className="font-medium">Programming Languages:</span>
                         <div className="flex flex-wrap gap-2 mt-1">
                           {mentor.programmingLanguages?.map(lang => (
                             <span key={lang} className={`px-2 py-1 rounded-full text-sm
@@ -268,14 +267,14 @@ export default function FindMentor() {
                   </Link>
 
                   <button
-                    onClick={() => handleMentorRequest(mentor.id)}
+                    onClick={() => handleContact(mentor.id)}
                     disabled={isRequesting === mentor.userId}
                     className={`w-full py-2 rounded-lg text-white transition-colors
                       ${theme === 'dark' 
                         ? 'bg-primary-dark hover:bg-blue-500 disabled:bg-gray-700' 
                         : 'bg-primary hover:bg-blue-700 disabled:bg-gray-400'}`}
                   >
-                    {isRequesting === mentor.userId ? 'Отправка...' : 'Связаться'}
+                    {isRequesting === mentor.userId ? 'Sending...' : 'Contact'}
                   </button>
                 </div>
               ))}

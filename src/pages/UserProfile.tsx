@@ -7,6 +7,7 @@ import { apiClient } from '../services/apiClient';
 import { tokenService } from '../services/tokenService';
 import { useAuth } from '../context/AuthContext';
 import ChatRoom from '../components/chat/ChatRoom';
+import { notify, handleApiError } from '../utils/notifications';
 
 const getStatusColor = (status: ActivityStatus) => {
   switch (status) {
@@ -24,11 +25,11 @@ const getStatusColor = (status: ActivityStatus) => {
 const getStatusText = (status: ActivityStatus) => {
   switch (status) {
     case 1:
-      return 'Онлайн';
+      return 'Online';
     case 2:
-      return 'Не активен';
+      return 'Inactive';
     case 3:
-      return 'Оффлайн';
+      return 'Offline';
     default:
       return 'Unknown';
   }
@@ -83,7 +84,6 @@ export default function UserProfile() {
     if (file && userInfo?.userId) {
       setUploading(true);
       try {
-        alert("середина")
         await apiClient.avatar({ data: file, fileName: file.name });
         await loadUser();
       } catch (e) {
@@ -102,14 +102,18 @@ export default function UserProfile() {
   };
 
   const handleStartChat = async () => {
+    if (!user) {
+      notify.warning('Please login to start a chat');
+      return;
+    }
+
     try {
-      // Получаем GUID комнаты для чата
       const roomId = await apiClient.chat(Number(userId));
       setChatRoomId(roomId);
       setIsChatOpen(true);
+      notify.success('Chat started successfully');
     } catch (error) {
-      console.error('Error starting chat:', error);
-      alert('Не удалось начать чат');
+      handleApiError(error);
     }
   };
 

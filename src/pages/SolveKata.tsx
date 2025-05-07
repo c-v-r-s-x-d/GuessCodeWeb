@@ -12,9 +12,10 @@ import 'prismjs/components/prism-csharp';
 import 'prismjs/components/prism-python';
 import 'prismjs/components/prism-java';
 import { apiClient } from '../services/apiClient';
-import { KataDto, KataCodeReadingAnswerDto, KataCodeReadingSolveResultDto, IKataCodeReadingAnswerDto } from '../services/api.generated';
-import { getDifficultyLabel, getLanguageLabel, getKataTypeLabel, getPrismLanguage } from '../utils/enumHelpers';
+import { KataDto, KataCodeReadingAnswerDto, KataCodeReadingSolveResultDto } from '../services/api.generated';
+import { getDifficultyLabel, getLanguageLabel, getKataTypeLabel } from '../utils/enumHelpers';
 import { Link } from 'react-router-dom';
+import { notify, handleApiError } from '../utils/notifications';
 
 export default function SolveKata() {
   const { theme } = useTheme();
@@ -43,12 +44,12 @@ export default function SolveKata() {
 
   const handleSubmit = async (answerData: { kataId: number; optionId: number }) => {
     if (!kata) return;
-
+    
     setIsSubmitting(true);
     try {
       const validateAnswer = () => {
         if (!answerData.kataId || !answerData.optionId) {
-          throw new Error('Не все поля заполнены');
+          throw new Error('Please fill in all fields');
         }
       };
 
@@ -62,13 +63,12 @@ export default function SolveKata() {
       setResult(response);
       
       if (response.isAnswerCorrect) {
-        alert('Правильный ответ!');
+        notify.success('Congratulations! Your answer is correct!');
       } else {
-        alert(response.error || 'Неправильный ответ. Попробуйте еще раз.');
+        notify.warning(response.error || 'Incorrect answer. Please try again.');
       }
     } catch (error) {
-      console.error('Error submitting solution:', error);
-      alert('Произошла ошибка при отправке ответа');
+      handleApiError(error);
     } finally {
       setIsSubmitting(false);
     }

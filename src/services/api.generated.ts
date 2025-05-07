@@ -885,6 +885,179 @@ export class Client {
     /**
      * @return Success
      */
+    mentees(): Promise<UserDto[]> {
+        let url_ = this.baseUrl + "/api/mentoring/mentees";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "text/plain"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processMentees(_response);
+        });
+    }
+
+    protected processMentees(response: Response): Promise<UserDto[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(UserDto.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<UserDto[]>(null as any);
+    }
+
+    /**
+     * @param mentorId (optional) 
+     * @return Success
+     */
+    mentor(mentorId: number | undefined): Promise<MentorDto> {
+        let url_ = this.baseUrl + "/api/mentoring/mentor?";
+        if (mentorId === null)
+            throw new Error("The parameter 'mentorId' cannot be null.");
+        else if (mentorId !== undefined)
+            url_ += "mentorId=" + encodeURIComponent("" + mentorId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "text/plain"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processMentor(_response);
+        });
+    }
+
+    protected processMentor(response: Response): Promise<MentorDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = MentorDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<MentorDto>(null as any);
+    }
+
+    /**
+     * @return Success
+     */
+    pendingMenteesAll(): Promise<UserDto[]> {
+        let url_ = this.baseUrl + "/api/mentoring/pending-mentees";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "text/plain"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processPendingMenteesAll(_response);
+        });
+    }
+
+    protected processPendingMenteesAll(response: Response): Promise<UserDto[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(UserDto.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<UserDto[]>(null as any);
+    }
+
+    /**
+     * @param menteeId (optional) 
+     * @param isApproved (optional) 
+     * @return Success
+     */
+    pendingMentees(menteeId: number | undefined, isApproved: boolean | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/api/mentoring/pending-mentees?";
+        if (menteeId === null)
+            throw new Error("The parameter 'menteeId' cannot be null.");
+        else if (menteeId !== undefined)
+            url_ += "menteeId=" + encodeURIComponent("" + menteeId) + "&";
+        if (isApproved === null)
+            throw new Error("The parameter 'isApproved' cannot be null.");
+        else if (isApproved !== undefined)
+            url_ += "isApproved=" + encodeURIComponent("" + isApproved) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processPendingMentees(_response);
+        });
+    }
+
+    protected processPendingMentees(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return Success
+     */
     profileInfo(userId: number): Promise<ProfileInfoDto> {
         let url_ = this.baseUrl + "/api/profile-info/{userId}";
         if (userId === undefined || userId === null)
@@ -1752,6 +1925,7 @@ export interface ITokenDto {
 }
 
 export class UserDto implements IUserDto {
+    id?: number;
     username?: string;
     password?: string;
     email?: string;
@@ -1761,6 +1935,7 @@ export class UserDto implements IUserDto {
     gitHubProfileId?: number | undefined;
     userProfileId?: number | undefined;
     roleId?: number | undefined;
+    mentorId?: number | undefined;
 
     constructor(data?: IUserDto) {
         if (data) {
@@ -1773,6 +1948,7 @@ export class UserDto implements IUserDto {
 
     init(_data?: any) {
         if (_data) {
+            this.id = _data["id"];
             this.username = _data["username"];
             this.password = _data["password"];
             this.email = _data["email"];
@@ -1782,6 +1958,7 @@ export class UserDto implements IUserDto {
             this.gitHubProfileId = _data["gitHubProfileId"];
             this.userProfileId = _data["userProfileId"];
             this.roleId = _data["roleId"];
+            this.mentorId = _data["mentorId"];
         }
     }
 
@@ -1794,6 +1971,7 @@ export class UserDto implements IUserDto {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
         data["username"] = this.username;
         data["password"] = this.password;
         data["email"] = this.email;
@@ -1803,11 +1981,13 @@ export class UserDto implements IUserDto {
         data["gitHubProfileId"] = this.gitHubProfileId;
         data["userProfileId"] = this.userProfileId;
         data["roleId"] = this.roleId;
+        data["mentorId"] = this.mentorId;
         return data;
     }
 }
 
 export interface IUserDto {
+    id?: number;
     username?: string;
     password?: string;
     email?: string;
@@ -1817,6 +1997,7 @@ export interface IUserDto {
     gitHubProfileId?: number | undefined;
     userProfileId?: number | undefined;
     roleId?: number | undefined;
+    mentorId?: number | undefined;
 }
 
 export interface FileParameter {
