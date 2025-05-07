@@ -6,14 +6,14 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 
 const getRankLabel = (rank: Rank): string => {
   switch (rank) {
-    case 1: return 'Новичок';
-    case 2: return 'Ученик';
-    case 3: return 'Практик';
-    case 4: return 'Специалист';
-    case 5: return 'Эксперт';
-    case 6: return 'Мастер';
-    case 7: return 'Гранд-мастер';
-    case 20: return 'Администратор';
+    case 1: return 'FifthKyu';
+    case 2: return 'FourthKyu';
+    case 3: return 'ThirdKyu';
+    case 4: return 'SecondKyu';
+    case 5: return 'FirstKyu';
+    case 6: return 'FirstDan';
+    case 7: return 'SecondDan';
+    case 20: return 'Master';
     default: return 'Unranked';
   }
 };

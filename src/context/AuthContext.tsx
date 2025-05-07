@@ -8,6 +8,7 @@ import { signalRService } from '../services/signalRService';
 interface AuthContextType {
   isAuthenticated: boolean;
   user: ProfileInfoDto | null;
+  setUser: (user: ProfileInfoDto | null) => void;
   login: (credentials: LoginDto) => Promise<void>;
   register: (userData: RegisterDto) => Promise<void>;
   logout: () => void;
@@ -34,11 +35,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const userId = tokenService.getUserId();
         if (!userId) {
-          setIsLoading(false);
+          setIsAuthenticated(false);
+          setUser(null);
           return;
         }
 
-        const response = await apiClient.profileInfo(userId);
+        const response = await apiClient.profileInfoGET(userId);
         
         // Only set authenticated if we successfully get user data
         if (response) {
@@ -76,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userId = tokenService.getUserId();
       if (!userId) throw new Error('No user ID found');
 
-      const response = await apiClient.profileInfo(userId);
+      const response = await apiClient.profileInfoGET(userId);
       setUser(response);
       setIsAuthenticated(!!response);
     } catch (error) {
@@ -131,7 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [navigate]);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, register, logout, isLoading }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, setUser, login, register, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

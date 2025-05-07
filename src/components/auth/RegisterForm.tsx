@@ -175,24 +175,6 @@ export default function RegisterForm() {
               <span className="text-sm">or</span>
               <div className="flex-grow h-px bg-current"></div>
             </div>
-
-            <GitHubButton 
-              text="Continue with GitHub"
-              onClick={() => {
-                // TODO: Implement GitHub OAuth
-                console.log('GitHub login clicked');
-              }}
-              disabled={isLoading}
-            />
-
-            <TelegramButton 
-              text="Continue with Telegram"
-              onClick={() => {
-                // TODO: Implement Telegram OAuth
-                console.log('Telegram login clicked');
-              }}
-              disabled={isLoading}
-            />
           </div>
         </form>
 

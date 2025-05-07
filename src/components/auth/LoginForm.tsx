@@ -126,38 +126,11 @@ export default function LoginForm() {
               <span className="text-sm">or</span>
               <div className="flex-grow h-px bg-current"></div>
             </div>
-
-            <GitHubButton 
-              text="Continue with GitHub"
-              onClick={() => {
-                // TODO: Implement GitHub OAuth
-                console.log('GitHub login clicked');
-              }}
-              disabled={isLoading}
-            />
-
-            <TelegramButton 
-              text="Continue with Telegram"
-              onClick={() => {
-                // TODO: Implement Telegram OAuth
-                console.log('Telegram login clicked');
-              }}
-              disabled={isLoading}
-            />
           </div>
         </form>
 
         <div className={`mt-6 text-sm text-center
           ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-          <p>
-            <Link 
-              to="/forgot-password"
-              className={`hover:underline
-                ${theme === 'dark' ? 'text-primary-dark' : 'text-primary'}`}
-            >
-              Forgot your password?
-            </Link>
-          </p>
           <p>
             Don't have an account?{' '}
             <Link 

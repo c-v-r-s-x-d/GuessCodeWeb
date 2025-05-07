@@ -5,6 +5,8 @@ import MainLayout from './components/layout/MainLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import Prism from 'prismjs';
 import { useEffect } from 'react';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Pages
 import Home from './pages/Home';
@@ -34,62 +36,76 @@ function App() {
   }, []);
 
   return (
-    <Router>
-      <ThemeProvider>
-        <AuthProvider>
-          <MainLayout>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<LoginForm />} />
-              <Route path="/register" element={<RegisterForm />} />
-              <Route path="/leaderboard" element={<Leaderboard />} />
-              <Route path="/faq" element={<FAQ />} />
+    <div className="min-h-screen">
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
+      <Router>
+        <ThemeProvider>
+          <AuthProvider>
+            <MainLayout>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<LoginForm />} />
+                <Route path="/register" element={<RegisterForm />} />
+                <Route path="/leaderboard" element={<Leaderboard />} />
+                <Route path="/faq" element={<FAQ />} />
 
-              {/* Protected routes */}
-              <Route path="/profile" element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              } />
-              <Route path="/challenges" element={
-                <ProtectedRoute>
-                  <Katas />
-                </ProtectedRoute>
-              } />
-              <Route path="/katas/create" element={
-                <ProtectedRoute>
-                  <CreateKata />
-                </ProtectedRoute>
-              } />
-              <Route path="/kata/:id" element={
-                <ProtectedRoute>
-                  <SolveKata />
-                </ProtectedRoute>
-              } />
-              <Route path="/become-mentor" element={
-                <ProtectedRoute>
-                  <BecomeMentor />
-                </ProtectedRoute>
-              } />
-              <Route path="/find-mentor" element={
-                <ProtectedRoute>
-                  <FindMentor />
-                </ProtectedRoute>
-              } />
-              <Route path="/user/:userId" element={<UserProfile />} />
-              <Route path="/admin" element={
-                <ProtectedRoute>
-                  <AdminPanel />
-                </ProtectedRoute>
-              } />
+                {/* Protected routes */}
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                } />
+                <Route path="/challenges" element={
+                  <ProtectedRoute>
+                    <Katas />
+                  </ProtectedRoute>
+                } />
+                <Route path="/katas/create" element={
+                  <ProtectedRoute>
+                    <CreateKata />
+                  </ProtectedRoute>
+                } />
+                <Route path="/kata/:id" element={
+                  <ProtectedRoute>
+                    <SolveKata />
+                  </ProtectedRoute>
+                } />
+                <Route path="/become-mentor" element={
+                  <ProtectedRoute>
+                    <BecomeMentor />
+                  </ProtectedRoute>
+                } />
+                <Route path="/find-mentor" element={
+                  <ProtectedRoute>
+                    <FindMentor />
+                  </ProtectedRoute>
+                } />
+                <Route path="/user/:userId" element={<UserProfile />} />
+                <Route path="/admin" element={
+                  <ProtectedRoute>
+                    <AdminPanel />
+                  </ProtectedRoute>
+                } />
 
-              {/* 404 catch-all route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </MainLayout>
-        </AuthProvider>
-      </ThemeProvider>
-    </Router>
+                {/* 404 catch-all route */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </MainLayout>
+          </AuthProvider>
+        </ThemeProvider>
+      </Router>
+    </div>
   );
 }
 

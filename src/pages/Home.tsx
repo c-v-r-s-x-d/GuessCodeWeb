@@ -25,7 +25,7 @@ export default function Home() {
               <p className="text-gray-300">
                 {index === 0 && 'Practice understanding complex code snippets and explain their functionality'}
                 {index === 1 && 'Identify bugs and potential issues in code samples'}
-                {index === 2 && 'Try your hand at coding against AI. Who will win?'}
+                {index === 2 && 'Try your hand at coding against AI. Who will win? (Coming soon)'}
                 {index === 3 && 'Find a mentor and improve your skills together'}
                 {index === 4 && 'Help your junior colleagues become programmers, and you yourself will gain invaluable mentoring experience'}
                 {index === 5 && 'Just enjoy the exciting katas and new acquaintances'}

@@ -44,7 +44,7 @@ export default function Footer() {
               Resources
             </h4>
             <ul className="space-y-2">
-              {['Blog', 'FAQ'].map((item, index) => (
+              {['FAQ'].map((item, index) => (
                 <li key={index}>
                   <Link 
                     to={`/${item.toLowerCase()}`} 

@@ -5,6 +5,7 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 import { apiClient } from '../services/apiClient';
 import { MentorDto, ProgrammingLanguage, MentorAvailability } from '../services/api.generated';
 import { getMentorAvailabilityLabel, getLanguageLabel } from '../utils/enumHelpers';
+import { notify, handleApiError } from '../utils/notifications';
 
 export default function BecomeMentor() {
   const { theme } = useTheme();
@@ -47,11 +48,9 @@ export default function BecomeMentor() {
     setIsLoading(true);
     try {
       await apiClient.mentorship(formData as MentorDto);
-      // TODO: Показать уведомление об успешной отправке
-      console.log('Mentor registration submitted successfully');
+      notify.success('Your mentor application has been submitted successfully!');
     } catch (error) {
-      console.error('Error submitting mentor registration:', error);
-      // TODO: Показать уведомление об ошибке
+      handleApiError(error);
     } finally {
       setIsLoading(false);
     }
@@ -62,24 +61,24 @@ export default function BecomeMentor() {
       <div className="max-w-2xl mx-auto">
         <h1 className={`text-3xl font-bold mb-8
           ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
-          Стать ментором
+          Become a Mentor
         </h1>
 
         <div className={`rounded-lg shadow-md p-6 mb-8
           ${theme === 'dark' ? 'bg-surface-dark' : 'bg-white'}`}>
           <h2 className={`text-xl font-semibold mb-4
             ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
-            Информация о вас
+            Your Information
           </h2>
           <p className={`mb-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-            Расскажите о своем опыте и навыках, чтобы помочь другим разработчикам расти.
+            Tell us about your experience and skills to help other developers grow.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="experience" className={`block text-sm font-medium mb-1
                 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                Опыт работы (лет)
+                Years of Experience
               </label>
               <input
                 type="number"
@@ -100,7 +99,7 @@ export default function BecomeMentor() {
             <div>
               <label className={`block text-sm font-medium mb-2
                 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                Языки программирования
+                Programming Languages
               </label>
               <div className="grid grid-cols-2 gap-4">
                 {Object.values(ProgrammingLanguage)
@@ -127,14 +126,14 @@ export default function BecomeMentor() {
                   ))}
               </div>
               <p className={`mt-2 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                Выберите языки программирования, в которых вы можете помочь другим
+                Choose programming languages in which you can help others
               </p>
             </div>
 
             <div>
               <label htmlFor="availability" className={`block text-sm font-medium mb-1
                 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                Доступность
+                Availability
               </label>
               <select
                 id="availability"
@@ -161,7 +160,7 @@ export default function BecomeMentor() {
             <div>
               <label htmlFor="about" className={`block text-sm font-medium mb-1
                 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                О себе
+                About Yourself
               </label>
               <textarea
                 id="about"
@@ -173,7 +172,7 @@ export default function BecomeMentor() {
                   ${theme === 'dark' 
                     ? 'bg-background-dark border-gray-700 text-text-dark' 
                     : 'border-gray-300 text-text-light'}`}
-                placeholder="Расскажите о своем опыте и почему вы хотите стать ментором"
+                placeholder="Tell us about your experience and why you want to become a mentor"
                 required
                 disabled={isLoading}
               />
@@ -190,7 +189,7 @@ export default function BecomeMentor() {
               {isLoading ? (
                 <LoadingSpinner size="small" color="text-white" />
               ) : (
-                'Подать заявку'
+                'Submit Application'
               )}
             </button>
           </form>
