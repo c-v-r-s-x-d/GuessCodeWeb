@@ -11,6 +11,7 @@ export default function Katas() {
   const [katas, setKatas] = useState<KataDto[]>([]);
   const [featuredKata, setFeaturedKata] = useState<KataDto | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [resolvedKatas, setResolvedKatas] = useState<number[]>([]);
   const [filter, setFilter] = useState({
     difficulty: 1,
     language: 1,
@@ -20,7 +21,17 @@ export default function Katas() {
 
   useEffect(() => {
     loadKatas();
+    loadResolvedKatas();
   }, [filter]);
+
+  const loadResolvedKatas = async () => {
+    try {
+      const response = await apiClient.resolvedAll();
+      setResolvedKatas(response || []);
+    } catch (error) {
+      console.error('Error loading resolved katas:', error);
+    }
+  };
 
   const loadKatas = async () => {
     setIsLoading(true);
@@ -49,7 +60,7 @@ export default function Katas() {
   };
 
   return (
-    <div className="container mx-auto px-4">
+    <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className={`text-3xl font-bold 
           ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
@@ -86,6 +97,11 @@ export default function Katas() {
                   ${theme === 'dark' ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-800'}`}>
                   {getDifficultyLabel(featuredKata.kataDifficulty!)}
                 </span>
+                {resolvedKatas.includes(featuredKata.id!) && (
+                  <span className="px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
+                    Решено
+                  </span>
+                )}
               </div>
             </div>
             <button
@@ -115,7 +131,7 @@ export default function Katas() {
                 ? 'bg-primary-dark hover:bg-blue-500' 
                 : 'bg-primary hover:bg-blue-700'}`}
           >
-            Start Challenge
+            {resolvedKatas.includes(featuredKata.id!) ? 'Просмотреть решение' : 'Начать решение'}
           </Link>
         </div>
       )}
@@ -207,9 +223,16 @@ export default function Katas() {
                   ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
                   {kata.title}
                 </h3>
-                <span className="px-2 py-1 text-sm rounded bg-blue-100 text-blue-800">
-                  {getDifficultyLabel(kata.kataDifficulty!)}
-                </span>
+                <div className="flex gap-2">
+                  <span className="px-2 py-1 text-sm rounded bg-blue-100 text-blue-800">
+                    {getDifficultyLabel(kata.kataDifficulty!)}
+                  </span>
+                  {resolvedKatas.includes(kata.id!) && (
+                    <span className="px-2 py-1 text-sm rounded bg-green-100 text-green-800">
+                      Решено
+                    </span>
+                  )}
+                </div>
               </div>
               <p className={`mb-4 line-clamp-3 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                 {kata.kataJsonContent?.kataDescription}

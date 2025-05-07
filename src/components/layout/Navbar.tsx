@@ -47,7 +47,7 @@ export default function Navbar() {
                   Become Mentor
                 </Link>
                 <Link to="/admin" className={`text-sm ${linkClass}`}>
-                  Администрирование
+                  Administration
                 </Link>
                 <div className="relative group">
                   <button 

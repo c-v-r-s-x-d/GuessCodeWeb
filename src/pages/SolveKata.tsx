@@ -12,22 +12,34 @@ import 'prismjs/components/prism-csharp';
 import 'prismjs/components/prism-python';
 import 'prismjs/components/prism-java';
 import { apiClient } from '../services/apiClient';
-import { KataDto, KataCodeReadingAnswerDto, KataCodeReadingSolveResultDto, IKataCodeReadingAnswerDto } from '../services/api.generated';
-import { getDifficultyLabel, getLanguageLabel, getKataTypeLabel, getPrismLanguage } from '../utils/enumHelpers';
+import { 
+  KataDto, 
+  KataCodeReadingAnswerDto, 
+  KataCodeReadingSolveResultDto,
+  KataBugFindingAnswerDto,
+  KataBugFindingSolveResultDto,
+  ResolvedKataDto,
+  KataType
+} from '../services/api.generated';
+import { getDifficultyLabel, getLanguageLabel, getKataTypeLabel } from '../utils/enumHelpers';
 import { Link } from 'react-router-dom';
+import { notify, handleApiError } from '../utils/notifications';
 
 export default function SolveKata() {
   const { theme } = useTheme();
   const { id } = useParams();
   const [kata, setKata] = useState<KataDto | null>(null);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
-  const [result, setResult] = useState<KataCodeReadingSolveResultDto | null>(null);
+  const [sourceCode, setSourceCode] = useState<string>('');
+  const [result, setResult] = useState<KataCodeReadingSolveResultDto | KataBugFindingSolveResultDto | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resolvedKata, setResolvedKata] = useState<ResolvedKataDto | null>(null);
 
   useEffect(() => {
     if (id) {
       loadKata(parseInt(id));
+      loadResolvedKata(parseInt(id));
     }
   }, [id]);
 
@@ -41,34 +53,58 @@ export default function SolveKata() {
     }
   };
 
-  const handleSubmit = async (answerData: { kataId: number; optionId: number }) => {
-    if (!kata) return;
-
-    setIsSubmitting(true);
+  const loadResolvedKata = async (kataId: number) => {
     try {
-      const validateAnswer = () => {
-        if (!answerData.kataId || !answerData.optionId) {
-          throw new Error('Не все поля заполнены');
-        }
-      };
-
-      validateAnswer();
-
-      const answer = new KataCodeReadingAnswerDto();
-      answer.kataId = answerData.kataId;
-      answer.optionId = answerData.optionId;
-      answer.toJSON();
-      const response = await apiClient.codeReading(answer);
-      setResult(response);
-      
-      if (response.isAnswerCorrect) {
-        alert('Правильный ответ!');
-      } else {
-        alert(response.error || 'Неправильный ответ. Попробуйте еще раз.');
+      const response = await apiClient.resolved(kataId);
+      setResolvedKata(response);
+      if (response.sourceCode) {
+        setSourceCode(response.sourceCode);
       }
     } catch (error) {
-      console.error('Error submitting solution:', error);
-      alert('Произошла ошибка при отправке ответа');
+      console.error('Error loading resolved kata:', error);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!kata || !id) return;
+    
+    setIsSubmitting(true);
+    try {
+      if (kata.kataType === KataType._1) { // Code Reading
+        if (!selectedOption) {
+          throw new Error('Пожалуйста, выберите вариант ответа');
+        }
+
+        const answer = new KataCodeReadingAnswerDto();
+        answer.kataId = parseInt(id);
+        answer.optionId = selectedOption;
+        const response = await apiClient.codeReading(answer);
+        setResult(response);
+        
+        if (response.isAnswerCorrect) {
+          notify.success('Поздравляем! Ваш ответ верный!');
+        } else {
+          notify.warning(response.error || 'Неверный ответ. Попробуйте еще раз.');
+        }
+      } else { // Bug Finding или Code Optimization
+        if (!sourceCode) {
+          throw new Error('Пожалуйста, введите код решения');
+        }
+
+        const answer = new KataBugFindingAnswerDto();
+        answer.kataId = parseInt(id);
+        answer.sourceCode = sourceCode;
+        const response = await apiClient.bugFinding(answer);
+        setResult(response);
+        
+        if (response.isScheduled) {
+          notify.success('Решение отправлено на проверку');
+        } else {
+          notify.warning('Не удалось отправить решение на проверку');
+        }
+      }
+    } catch (error) {
+      handleApiError(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -110,7 +146,7 @@ export default function SolveKata() {
           </div>
 
           {/* Source Code */}
-          <div className="mb-6">
+          <div className="mb-8">
             <h2 className={`text-lg font-semibold mb-2 ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
               Source Code
             </h2>
@@ -121,89 +157,133 @@ export default function SolveKata() {
             </pre>
           </div>
 
-          {/* Answer Options */}
-          <div className="space-y-4 mb-12">
-            {kata.kataJsonContent?.answerOptions?.map((option) => (
+          {/* Solution Section */}
+          {resolvedKata ? (
+            <div className="space-y-6 mb-12">
+              <h2 className={`text-lg font-semibold ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
+                Ваше решение
+              </h2>
+              
+              {kata.kataType === KataType._1 ? (
+                <div className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                  <p className="mb-2">Выбранный вариант: {resolvedKata.selectedOptionId}</p>
+                  <p>Заработано очков: {resolvedKata.pointEarned}</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <pre className="relative rounded-lg p-4 overflow-x-auto font-mono text-sm select-none bg-[#272822]">
+                    <code className={`language-javascript block whitespace-pre`}>
+                      {resolvedKata.sourceCode}
+                    </code>
+                  </pre>
+                  {resolvedKata.executionOutput && (
+                    <div className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                      <p className="mb-2">Результат выполнения:</p>
+                      <pre className="whitespace-pre-wrap">{resolvedKata.executionOutput}</pre>
+                    </div>
+                  )}
+                  <p>Заработано очков: {resolvedKata.pointEarned}</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-6 mb-12">
+              {kata.kataType === KataType._1 ? (
+                // Code Reading - варианты ответов
+                <div className="space-y-4">
+                  {kata.kataJsonContent?.answerOptions?.map((option) => (
+                    <button
+                      key={option.optionId}
+                      onClick={() => setSelectedOption(option.optionId!)}
+                      className={`w-full p-4 text-left rounded-lg border transition-colors
+                        ${selectedOption === option.optionId
+                          ? theme === 'dark' 
+                            ? 'bg-primary-dark text-white'
+                            : 'bg-primary text-white'
+                          : theme === 'dark'
+                            ? 'bg-surface-dark hover:bg-gray-700'
+                            : 'bg-white hover:bg-gray-50'
+                        }`}
+                    >
+                      {option.option}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                // Bug Finding или Code Optimization - поле для ввода кода
+                <div className="space-y-4">
+                  <textarea
+                    value={sourceCode}
+                    onChange={(e) => setSourceCode(e.target.value)}
+                    rows={10}
+                    className={`w-full px-3 py-2 rounded-lg font-mono text-sm
+                      ${theme === 'dark' 
+                        ? 'bg-gray-800 text-gray-200 border-gray-700' 
+                        : 'bg-white text-gray-800 border-gray-300'}`}
+                    placeholder="Введите ваш код решения..."
+                  />
+                </div>
+              )}
+              
               <button
-                key={option.optionId}
-                onClick={() => setSelectedOption(option.optionId!)}
-                className={`w-full p-4 text-left rounded-lg border transition-colors
-                  ${selectedOption === option.optionId
-                    ? theme === 'dark' 
-                      ? 'bg-primary-dark text-white'
-                      : 'bg-primary text-white'
+                onClick={handleSubmit}
+                disabled={isSubmitting || (kata.kataType === KataType._1 ? !selectedOption : !sourceCode)}
+                className={`w-full py-3 rounded-lg text-white font-semibold transition-colors
+                  ${isSubmitting || (kata.kataType === KataType._1 ? !selectedOption : !sourceCode)
+                    ? 'bg-gray-400 cursor-not-allowed'
                     : theme === 'dark'
-                      ? 'bg-surface-dark hover:bg-gray-700'
-                      : 'bg-white hover:bg-gray-50'
+                      ? 'bg-primary-dark hover:bg-blue-500'
+                      : 'bg-primary hover:bg-blue-700'
                   }`}
               >
-                {option.option}
-              </button>
-            ))}
-            
-            <button
-              onClick={() => handleSubmit({ kataId: parseInt(id!), optionId: selectedOption! })}
-              disabled={selectedOption === null || isSubmitting}
-              className={`w-full py-3 mt-6 rounded-lg text-white font-semibold transition-colors
-                ${selectedOption === null || isSubmitting
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : theme === 'dark'
-                    ? 'bg-primary-dark hover:bg-blue-500'
-                    : 'bg-primary hover:bg-blue-700'
-                }`}
-            >
-              {isSubmitting ? 'Submitting...' : 'Submit Answer'}
-            </button>
-          </div>
-        </div>
-
-        {/* Discussion Section - Now at bottom with divider */}
-        <div className={`border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
-          <div className="max-w-3xl mx-auto py-8">
-            <h2 className={`text-lg font-semibold mb-4 ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
-              Discussion
-            </h2>
-            
-            {/* Add Comment Form */}
-            <div className="mb-6">
-              <textarea
-                placeholder="Add your comment..."
-                rows={3}
-                className={`w-full px-3 py-2 rounded-lg focus:outline-none focus:ring-2
-                  ${theme === 'dark' 
-                    ? 'bg-background-dark border-gray-700 text-text-dark focus:ring-primary-dark' 
-                    : 'border-gray-300 text-text-light focus:ring-primary'}`}
-              />
-              <button
-                className={`mt-2 px-4 py-2 rounded-lg text-white text-sm
-                  ${theme === 'dark'
-                    ? 'bg-primary-dark hover:bg-blue-500'
-                    : 'bg-primary hover:bg-blue-700'}`}
-              >
-                Post Comment
+                {isSubmitting ? 'Отправка...' : 'Отправить решение'}
               </button>
             </div>
+          )}
 
-            {/* Comments List */}
-            <div className="space-y-4">
-              <div className={`p-4 rounded-lg
-                ${theme === 'dark' ? 'bg-background-dark' : 'bg-gray-50'}`}>
-                <div className="flex justify-between items-start mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className={`font-medium ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
-                      User #123
-                    </span>
-                    <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                      2 hours ago
-                    </span>
-                  </div>
-                </div>
-                <p className={theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}>
-                  This is a sample comment. The actual comments will be implemented later.
+          {/* Result Section */}
+          {result && !resolvedKata && (
+            <div className={`p-4 rounded-lg mb-8
+              ${kata.kataType === KataType._1 
+                ? (result as KataCodeReadingSolveResultDto).isAnswerCorrect
+                  ? theme === 'dark' ? 'bg-green-900/30' : 'bg-green-50'
+                  : theme === 'dark' ? 'bg-red-900/30' : 'bg-red-50'
+                : (result as KataBugFindingSolveResultDto).isScheduled
+                  ? theme === 'dark' ? 'bg-green-900/30' : 'bg-green-50'
+                  : theme === 'dark' ? 'bg-red-900/30' : 'bg-red-50'
+              }`}>
+              <p className={`font-medium
+                ${kata.kataType === KataType._1
+                  ? (result as KataCodeReadingSolveResultDto).isAnswerCorrect
+                    ? theme === 'dark' ? 'text-green-300' : 'text-green-800'
+                    : theme === 'dark' ? 'text-red-300' : 'text-red-800'
+                  : (result as KataBugFindingSolveResultDto).isScheduled
+                    ? theme === 'dark' ? 'text-green-300' : 'text-green-800'
+                    : theme === 'dark' ? 'text-red-300' : 'text-red-800'
+                }`}>
+                {kata.kataType === KataType._1
+                  ? (result as KataCodeReadingSolveResultDto).isAnswerCorrect 
+                    ? 'Поздравляем!' 
+                    : 'Попробуйте еще раз'
+                  : (result as KataBugFindingSolveResultDto).isScheduled
+                    ? 'Решение отправлено на проверку'
+                    : 'Не удалось отправить решение'
+                }
+              </p>
+              {kata.kataType === KataType._1 && (result as KataCodeReadingSolveResultDto).error && (
+                <p className={`mt-2
+                  ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                  {(result as KataCodeReadingSolveResultDto).error}
                 </p>
-              </div>
+              )}
+              {kata.kataType === KataType._1 && (result as KataCodeReadingSolveResultDto).pointsEarned && (
+                <p className={`mt-2
+                  ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Заработано очков: {(result as KataCodeReadingSolveResultDto).pointsEarned}
+                </p>
+              )}
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

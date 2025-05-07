@@ -197,9 +197,7 @@ export class Client {
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = new FormData();
-        if (file === null || file === undefined)
-            throw new Error("The parameter 'file' cannot be null.");
-        else
+        if (file !== null && file !== undefined)
             content_.append("file", file.data, file.fileName ? file.fileName : "file");
 
         let options_: RequestInit = {
@@ -248,9 +246,7 @@ export class Client {
             throw new Error("The parameter 'kataDtoRaw' cannot be null.");
         else
             content_.append("kataDtoRaw", kataDtoRaw.toString());
-        if (file === null || file === undefined)
-            throw new Error("The parameter 'file' cannot be null.");
-        else
+        if (file !== null && file !== undefined)
             content_.append("file", file.data, file.fileName ? file.fileName : "file");
 
         let options_: RequestInit = {
@@ -540,6 +536,90 @@ export class Client {
             });
         }
         return Promise.resolve<KataDto[]>(null as any);
+    }
+
+    /**
+     * @return Success
+     */
+    resolvedAll(): Promise<number[]> {
+        let url_ = this.baseUrl + "/api/kata-search/resolved";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "text/plain"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processResolvedAll(_response);
+        });
+    }
+
+    protected processResolvedAll(response: Response): Promise<number[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(item);
+            }
+            else {
+                result200 = <any>null;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number[]>(null as any);
+    }
+
+    /**
+     * @return Success
+     */
+    resolved(kataId: number): Promise<ResolvedKataDto> {
+        let url_ = this.baseUrl + "/api/kata-search/resolved/{kataId}";
+        if (kataId === undefined || kataId === null)
+            throw new Error("The parameter 'kataId' must be defined.");
+        url_ = url_.replace("{kataId}", encodeURIComponent("" + kataId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "text/plain"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processResolved(_response);
+        });
+    }
+
+    protected processResolved(response: Response): Promise<ResolvedKataDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = ResolvedKataDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ResolvedKataDto>(null as any);
     }
 
     /**
@@ -885,7 +965,180 @@ export class Client {
     /**
      * @return Success
      */
-    profileInfo(userId: number): Promise<ProfileInfoDto> {
+    mentees(): Promise<UserDto[]> {
+        let url_ = this.baseUrl + "/api/mentoring/mentees";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "text/plain"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processMentees(_response);
+        });
+    }
+
+    protected processMentees(response: Response): Promise<UserDto[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(UserDto.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<UserDto[]>(null as any);
+    }
+
+    /**
+     * @param mentorId (optional) 
+     * @return Success
+     */
+    mentor(mentorId: number | undefined): Promise<MentorDto> {
+        let url_ = this.baseUrl + "/api/mentoring/mentor?";
+        if (mentorId === null)
+            throw new Error("The parameter 'mentorId' cannot be null.");
+        else if (mentorId !== undefined)
+            url_ += "mentorId=" + encodeURIComponent("" + mentorId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "text/plain"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processMentor(_response);
+        });
+    }
+
+    protected processMentor(response: Response): Promise<MentorDto> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = MentorDto.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<MentorDto>(null as any);
+    }
+
+    /**
+     * @return Success
+     */
+    pendingMenteesAll(): Promise<UserDto[]> {
+        let url_ = this.baseUrl + "/api/mentoring/pending-mentees";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "text/plain"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processPendingMenteesAll(_response);
+        });
+    }
+
+    protected processPendingMenteesAll(response: Response): Promise<UserDto[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(UserDto.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<UserDto[]>(null as any);
+    }
+
+    /**
+     * @param menteeId (optional) 
+     * @param isApproved (optional) 
+     * @return Success
+     */
+    pendingMentees(menteeId: number | undefined, isApproved: boolean | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/api/mentoring/pending-mentees?";
+        if (menteeId === null)
+            throw new Error("The parameter 'menteeId' cannot be null.");
+        else if (menteeId !== undefined)
+            url_ += "menteeId=" + encodeURIComponent("" + menteeId) + "&";
+        if (isApproved === null)
+            throw new Error("The parameter 'isApproved' cannot be null.");
+        else if (isApproved !== undefined)
+            url_ += "isApproved=" + encodeURIComponent("" + isApproved) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processPendingMentees(_response);
+        });
+    }
+
+    protected processPendingMentees(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return Success
+     */
+    profileInfoGET(userId: number): Promise<ProfileInfoDto> {
         let url_ = this.baseUrl + "/api/profile-info/{userId}";
         if (userId === undefined || userId === null)
             throw new Error("The parameter 'userId' must be defined.");
@@ -900,11 +1153,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processProfileInfo(_response);
+            return this.processProfileInfoGET(_response);
         });
     }
 
-    protected processProfileInfo(response: Response): Promise<ProfileInfoDto> {
+    protected processProfileInfoGET(response: Response): Promise<ProfileInfoDto> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -949,6 +1202,44 @@ export class Client {
     }
 
     protected processAvatar(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @param body (optional) 
+     * @return Success
+     */
+    profileInfoPOST(body: ProfileUpdateValuesDto | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/api/profile-info";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processProfileInfoPOST(_response);
+        });
+    }
+
+    protected processProfileInfoPOST(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -1141,9 +1432,7 @@ export interface IKataBugFindingAnswerDto {
 }
 
 export class KataBugFindingSolveResultDto implements IKataBugFindingSolveResultDto {
-    isAnswerCorrect?: boolean;
-    error?: string | undefined;
-    pointsEarned?: number | undefined;
+    isScheduled?: boolean;
 
     constructor(data?: IKataBugFindingSolveResultDto) {
         if (data) {
@@ -1156,9 +1445,7 @@ export class KataBugFindingSolveResultDto implements IKataBugFindingSolveResultD
 
     init(_data?: any) {
         if (_data) {
-            this.isAnswerCorrect = _data["isAnswerCorrect"];
-            this.error = _data["error"];
-            this.pointsEarned = _data["pointsEarned"];
+            this.isScheduled = _data["isScheduled"];
         }
     }
 
@@ -1171,17 +1458,13 @@ export class KataBugFindingSolveResultDto implements IKataBugFindingSolveResultD
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
-        data["isAnswerCorrect"] = this.isAnswerCorrect;
-        data["error"] = this.error;
-        data["pointsEarned"] = this.pointsEarned;
+        data["isScheduled"] = this.isScheduled;
         return data;
     }
 }
 
 export interface IKataBugFindingSolveResultDto {
-    isAnswerCorrect?: boolean;
-    error?: string | undefined;
-    pointsEarned?: number | undefined;
+    isScheduled?: boolean;
 }
 
 export class KataCodeReadingAnswerDto implements IKataCodeReadingAnswerDto {
@@ -1649,6 +1932,58 @@ export interface IProfileInfoDto {
     userId?: number;
 }
 
+export class ProfileUpdateValuesDto implements IProfileUpdateValuesDto {
+    userId?: number;
+    username?: string | undefined;
+    newPassword?: string | undefined;
+    confirmCurrentPassword?: string | undefined;
+    description?: string | undefined;
+
+    constructor(data?: IProfileUpdateValuesDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.username = _data["username"];
+            this.newPassword = _data["newPassword"];
+            this.confirmCurrentPassword = _data["confirmCurrentPassword"];
+            this.description = _data["description"];
+        }
+    }
+
+    static fromJS(data: any): ProfileUpdateValuesDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProfileUpdateValuesDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["username"] = this.username;
+        data["newPassword"] = this.newPassword;
+        data["confirmCurrentPassword"] = this.confirmCurrentPassword;
+        data["description"] = this.description;
+        return data;
+    }
+}
+
+export interface IProfileUpdateValuesDto {
+    userId?: number;
+    username?: string | undefined;
+    newPassword?: string | undefined;
+    confirmCurrentPassword?: string | undefined;
+    description?: string | undefined;
+}
+
 export enum ProgrammingLanguage {
     _1 = 1,
     _2 = 2,
@@ -1711,6 +2046,62 @@ export interface IRegisterDto {
     password?: string;
 }
 
+export class ResolvedKataDto implements IResolvedKataDto {
+    kataId?: number;
+    resolvedUserId?: number;
+    pointEarned?: number;
+    sourceCode?: string | undefined;
+    selectedOptionId?: number | undefined;
+    executionOutput?: string | undefined;
+
+    constructor(data?: IResolvedKataDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.kataId = _data["kataId"];
+            this.resolvedUserId = _data["resolvedUserId"];
+            this.pointEarned = _data["pointEarned"];
+            this.sourceCode = _data["sourceCode"];
+            this.selectedOptionId = _data["selectedOptionId"];
+            this.executionOutput = _data["executionOutput"];
+        }
+    }
+
+    static fromJS(data: any): ResolvedKataDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new ResolvedKataDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["kataId"] = this.kataId;
+        data["resolvedUserId"] = this.resolvedUserId;
+        data["pointEarned"] = this.pointEarned;
+        data["sourceCode"] = this.sourceCode;
+        data["selectedOptionId"] = this.selectedOptionId;
+        data["executionOutput"] = this.executionOutput;
+        return data;
+    }
+}
+
+export interface IResolvedKataDto {
+    kataId?: number;
+    resolvedUserId?: number;
+    pointEarned?: number;
+    sourceCode?: string | undefined;
+    selectedOptionId?: number | undefined;
+    executionOutput?: string | undefined;
+}
+
 export class TokenDto implements ITokenDto {
     accessToken?: string | undefined;
     userId?: number | undefined;
@@ -1752,6 +2143,7 @@ export interface ITokenDto {
 }
 
 export class UserDto implements IUserDto {
+    id?: number;
     username?: string;
     password?: string;
     email?: string;
@@ -1761,6 +2153,7 @@ export class UserDto implements IUserDto {
     gitHubProfileId?: number | undefined;
     userProfileId?: number | undefined;
     roleId?: number | undefined;
+    mentorId?: number | undefined;
 
     constructor(data?: IUserDto) {
         if (data) {
@@ -1773,6 +2166,7 @@ export class UserDto implements IUserDto {
 
     init(_data?: any) {
         if (_data) {
+            this.id = _data["id"];
             this.username = _data["username"];
             this.password = _data["password"];
             this.email = _data["email"];
@@ -1782,6 +2176,7 @@ export class UserDto implements IUserDto {
             this.gitHubProfileId = _data["gitHubProfileId"];
             this.userProfileId = _data["userProfileId"];
             this.roleId = _data["roleId"];
+            this.mentorId = _data["mentorId"];
         }
     }
 
@@ -1794,6 +2189,7 @@ export class UserDto implements IUserDto {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
         data["username"] = this.username;
         data["password"] = this.password;
         data["email"] = this.email;
@@ -1803,11 +2199,13 @@ export class UserDto implements IUserDto {
         data["gitHubProfileId"] = this.gitHubProfileId;
         data["userProfileId"] = this.userProfileId;
         data["roleId"] = this.roleId;
+        data["mentorId"] = this.mentorId;
         return data;
     }
 }
 
 export interface IUserDto {
+    id?: number;
     username?: string;
     password?: string;
     email?: string;
@@ -1817,6 +2215,7 @@ export interface IUserDto {
     gitHubProfileId?: number | undefined;
     userProfileId?: number | undefined;
     roleId?: number | undefined;
+    mentorId?: number | undefined;
 }
 
 export interface FileParameter {

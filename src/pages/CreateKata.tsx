@@ -5,6 +5,7 @@ import { apiClient } from '../services/apiClient';
 import { KataDto, ProgrammingLanguage, KataDifficulty, KataType, KataJsonContent, AnswerOption } from '../services/api.generated';
 import { getDifficultyLabel, getLanguageLabel, getKataTypeLabel } from '../utils/enumHelpers';
 import { PlusIcon, TrashIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { notify, handleApiError } from '../utils/notifications';
 
 interface FormProps {
   formData: KataDto;
@@ -416,6 +417,7 @@ const CodeOptimizationForm: React.FC<CodeOptimizationFormProps> = ({ formData, s
 const CreateKata: React.FC = () => {
   const { theme } = useTheme();
   const userId = Number(localStorage.getItem('userId'));
+  const navigate = useNavigate();
 
   const initialKataJsonContent = KataJsonContent.fromJS({
     kataDescription: '',
@@ -435,10 +437,12 @@ const CreateKata: React.FC = () => {
   });
 
   const [formData, setFormData] = useState<KataDto>(initialFormData);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    setIsSubmitting(true);
+
     try {
       // Создаем объект с данными ката
       const kataData = KataDto.fromJS({
@@ -477,10 +481,12 @@ const CreateKata: React.FC = () => {
         fileName: file.name
       } : undefined);
 
-      alert('Ката успешно создана!');
+      notify.success('Kata created successfully!');
+      navigate('/challenges');
     } catch (error) {
-      console.error('Error creating kata:', error);
-      alert('Ошибка при создании ката');
+      handleApiError(error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -664,6 +670,7 @@ const CreateKata: React.FC = () => {
               ${theme === 'dark' 
                 ? 'bg-primary-dark hover:bg-primary-dark/90' 
                 : 'bg-primary hover:bg-primary/90'}`}
+            disabled={isSubmitting}
           >
             Create Kata
           </button>

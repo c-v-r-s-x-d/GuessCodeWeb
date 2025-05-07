@@ -6,6 +6,7 @@ import { apiClient } from '../services/apiClient';
 import { MentorDto, KataDto } from '../services/api.generated';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { getLanguageLabel } from '../utils/enumHelpers';
+import { notify, handleApiError } from '../utils/notifications';
 
 type TabType = 'mentors' | 'users' | 'katas' | 'reports';
 
@@ -16,10 +17,10 @@ interface Tab {
 }
 
 const tabs: Tab[] = [
-  { id: 'mentors', name: 'Менторы', icon: ShieldCheckIcon },
-  { id: 'users', name: 'Пользователи', icon: UserIcon },
-  { id: 'katas', name: 'Каты', icon: CodeBracketIcon },
-  { id: 'reports', name: 'Жалобы', icon: LockClosedIcon },
+  { id: 'mentors', name: 'Mentors', icon: ShieldCheckIcon },
+  { id: 'users', name: 'Users', icon: UserIcon },
+  { id: 'katas', name: 'Katas', icon: CodeBracketIcon },
+  { id: 'reports', name: 'Reports', icon: LockClosedIcon },
 ];
 
 export default function AdminPanel() {
@@ -73,9 +74,9 @@ export default function AdminPanel() {
     try {
       await apiClient.pendingMentors(mentorId, isApproved);
       setMentors(mentors);
+      notify.success(`Mentor request ${isApproved ? 'approved' : 'rejected'} successfully`);
     } catch (error) {
-      console.error('Error handling mentor action:', error);
-      alert('Произошла ошибка при обработке запроса ментора');
+      handleApiError(error);
     }
   };
 
@@ -83,9 +84,9 @@ export default function AdminPanel() {
     try {
       await apiClient.pendingKatas(kataId, isApproved);
       setPendingKatas(pendingKatas.filter(kata => kata.id !== kataId));
+      notify.success(`Kata ${isApproved ? 'approved' : 'rejected'} successfully`);
     } catch (error) {
-      console.error('Error handling kata action:', error);
-      alert('Произошла ошибка при обработке каты');
+      handleApiError(error);
     }
   };
 
@@ -94,7 +95,7 @@ export default function AdminPanel() {
       <div className="container mx-auto px-4 py-8">
         <div className={`p-4 rounded-lg text-center
           ${theme === 'dark' ? 'bg-red-900/30 text-red-200' : 'bg-red-50 text-red-800'}`}>
-          У вас нет доступа к панели администратора
+          You don't have access to the admin panel
         </div>
       </div>
     );
@@ -111,12 +112,12 @@ export default function AdminPanel() {
           <div>
             <h2 className={`text-xl font-semibold mb-4
               ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
-              Запросы на менторство
+              Mentorship Requests
             </h2>
             {mentors.length === 0 ? (
               <p className={`text-center py-4
                 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                Нет новых запросов на менторство
+                No new mentorship requests
               </p>
             ) : (
               <div className="space-y-4">
@@ -127,19 +128,19 @@ export default function AdminPanel() {
                       <div>
                         <h3 className={`font-medium
                           ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
-                          ID пользователя: {mentor.userId}
+                          User ID: {mentor.userId}
                         </h3>
                         <p className={`mt-1
                           ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                          Опыт: {mentor.experience} лет
+                          Experience: {mentor.experience} years
                         </p>
                         <p className={`mt-1
                           ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                          Языки программирования: {mentor.programmingLanguages?.map(lang => getLanguageLabel(lang)).join(', ')}
+                          Programming Languages: {mentor.programmingLanguages?.map(lang => getLanguageLabel(lang)).join(', ')}
                         </p>
                         <p className={`mt-1
                           ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                          О себе: {mentor.about}
+                          About: {mentor.about}
                         </p>
                       </div>
                       <div className="flex space-x-2">
@@ -147,13 +148,13 @@ export default function AdminPanel() {
                           onClick={() => handleMentorAction(mentor.id!, true)}
                           className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
                         >
-                          Одобрить
+                          Approve
                         </button>
                         <button
                           onClick={() => handleMentorAction(mentor.id!, false)}
                           className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
                         >
-                          Отклонить
+                          Reject
                         </button>
                       </div>
                     </div>
@@ -170,12 +171,12 @@ export default function AdminPanel() {
           <div>
             <h2 className={`text-xl font-semibold mb-4
               ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
-              Каты на согласование
+              Katas Pending Approval
             </h2>
             {pendingKatas.length === 0 ? (
               <p className={`text-center py-4
                 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                Нет кат, ожидающих согласования
+                No katas pending approval
               </p>
             ) : (
               <div className="space-y-4">
@@ -194,11 +195,11 @@ export default function AdminPanel() {
                         </p>
                         <p className={`mt-1
                           ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                          Язык программирования: {getLanguageLabel(kata.programmingLanguage!)}
+                          Programming Language: {getLanguageLabel(kata.programmingLanguage!)}
                         </p>
                         <p className={`mt-1
                           ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                          Описание: {kata.kataJsonContent?.kataDescription}
+                          Description: {kata.kataJsonContent?.kataDescription}
                         </p>
                       </div>
                       <div className="flex space-x-2">
@@ -206,13 +207,13 @@ export default function AdminPanel() {
                           onClick={() => handleKataAction(kata.id!, true)}
                           className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
                         >
-                          Одобрить
+                          Approve
                         </button>
                         <button
                           onClick={() => handleKataAction(kata.id!, false)}
                           className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
                         >
-                          Отклонить
+                          Reject
                         </button>
                       </div>
                     </div>
@@ -234,7 +235,7 @@ export default function AdminPanel() {
       <div className="max-w-6xl mx-auto">
         <h1 className={`text-3xl font-bold mb-8
           ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
-          Панель администратора
+          Admin Panel
         </h1>
 
         <div className="flex space-x-4 mb-6">
@@ -290,7 +291,7 @@ function UsersTab() {
     <div>
       <h2 className={`text-xl font-semibold mb-4
         ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
-        Управление пользователями
+        User Management
       </h2>
       <div className="space-y-4">
         {users.map((user) => (
@@ -305,7 +306,7 @@ function UsersTab() {
                   {user.email}
                 </p>
                 <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Последний вход: {user.lastLogin}
+                  Last login: {user.lastLogin}
                 </p>
               </div>
               <div>
@@ -314,14 +315,14 @@ function UsersTab() {
                     onClick={() => handleBlock(user.id)}
                     className="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700"
                   >
-                    Заблокировать
+                    Block
                   </button>
                 ) : (
                   <button
                     onClick={() => handleUnblock(user.id)}
                     className="px-3 py-1 text-sm font-medium text-white bg-green-600 rounded hover:bg-green-700"
                   >
-                    Разблокировать
+                    Unblock
                   </button>
                 )}
               </div>
@@ -350,7 +351,7 @@ function ReportsTab() {
     <div>
       <h2 className={`text-xl font-semibold mb-4
         ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
-        Жалобы и отчеты
+        Reports and Complaints
       </h2>
       <div className="space-y-4">
         {reports.map((report) => (
@@ -358,14 +359,14 @@ function ReportsTab() {
             ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
             <div className="flex justify-between items-center">
               <div>
-                <p className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'}`}>
-                  Тип: {report.type}
+                <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Type: {report.type}
                 </p>
                 <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Объект: {report.target}
+                  Target: {report.target}
                 </p>
                 <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Отправитель: {report.reporter}
+                  Reporter: {report.reporter}
                 </p>
               </div>
               <div>
@@ -374,11 +375,11 @@ function ReportsTab() {
                     onClick={() => handleResolve(report.id)}
                     className="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700"
                   >
-                    Решить
+                    Resolve
                   </button>
                 ) : (
                   <span className="px-3 py-1 text-sm font-medium text-white bg-green-600 rounded">
-                    Решено
+                    Resolved
                   </span>
                 )}
               </div>
@@ -388,4 +389,4 @@ function ReportsTab() {
       </div>
     </div>
   );
-} 
+}

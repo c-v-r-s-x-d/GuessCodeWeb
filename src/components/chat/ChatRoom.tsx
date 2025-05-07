@@ -3,6 +3,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
 import { apiClient } from '../../services/apiClient';
+import { notify, handleApiError } from '../../utils/notifications';
 
 interface Message {
   userId: number;
@@ -91,8 +92,7 @@ export default function ChatRoom({ roomId, onClose }: ChatRoomProps) {
       console.log('Message sent successfully');
       setNewMessage('');
     } catch (error) {
-      console.error('Error sending message:', error);
-      alert('Не удалось отправить сообщение');
+      handleApiError(error);
     }
   };
 
