@@ -19,6 +19,120 @@ export class Client {
     }
 
     /**
+     * @param userId (optional) 
+     * @return Success
+     */
+    ban(userId: number | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/api/administration/ban?";
+        if (userId === null)
+            throw new Error("The parameter 'userId' cannot be null.");
+        else if (userId !== undefined)
+            url_ += "userId=" + encodeURIComponent("" + userId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processBan(_response);
+        });
+    }
+
+    protected processBan(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @param userId (optional) 
+     * @return Success
+     */
+    unban(userId: number | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/api/administration/unban?";
+        if (userId === null)
+            throw new Error("The parameter 'userId' cannot be null.");
+        else if (userId !== undefined)
+            url_ += "userId=" + encodeURIComponent("" + userId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "POST",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUnban(_response);
+        });
+    }
+
+    protected processUnban(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @param body (optional) 
+     * @return Success
+     */
+    role(body: ChangeUserRoleDto | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/api/administration/role";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processRole(_response);
+        });
+    }
+
+    protected processRole(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
      * @param body (optional) 
      * @return Success
      */
@@ -43,48 +157,6 @@ export class Client {
     }
 
     protected processLogin(response: Response): Promise<TokenDto> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = TokenDto.fromJS(resultData200);
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<TokenDto>(null as any);
-    }
-
-    /**
-     * @param body (optional) 
-     * @return Success
-     */
-    github(body: string | undefined): Promise<TokenDto> {
-        let url_ = this.baseUrl + "/api/auth/login/github";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(body);
-
-        let options_: RequestInit = {
-            body: content_,
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "text/plain"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGithub(_response);
-        });
-    }
-
-    protected processGithub(response: Response): Promise<TokenDto> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -197,7 +269,9 @@ export class Client {
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = new FormData();
-        if (file !== null && file !== undefined)
+        if (file === null || file === undefined)
+            throw new Error("The parameter 'file' cannot be null.");
+        else
             content_.append("file", file.data, file.fileName ? file.fileName : "file");
 
         let options_: RequestInit = {
@@ -246,7 +320,9 @@ export class Client {
             throw new Error("The parameter 'kataDtoRaw' cannot be null.");
         else
             content_.append("kataDtoRaw", kataDtoRaw.toString());
-        if (file !== null && file !== undefined)
+        if (file === null || file === undefined)
+            throw new Error("The parameter 'file' cannot be null.");
+        else
             content_.append("file", file.data, file.fileName ? file.fileName : "file");
 
         let options_: RequestInit = {
@@ -1391,6 +1467,46 @@ export interface IAnswerOption {
     isCorrect?: boolean;
 }
 
+export class ChangeUserRoleDto implements IChangeUserRoleDto {
+    userId?: number;
+    roleName?: string;
+
+    constructor(data?: IChangeUserRoleDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.userId = _data["userId"];
+            this.roleName = _data["roleName"];
+        }
+    }
+
+    static fromJS(data: any): ChangeUserRoleDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new ChangeUserRoleDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
+        data["roleName"] = this.roleName;
+        return data;
+    }
+}
+
+export interface IChangeUserRoleDto {
+    userId?: number;
+    roleName?: string;
+}
+
 export class KataBugFindingAnswerDto implements IKataBugFindingAnswerDto {
     kataId?: number;
     sourceCode?: string;
@@ -2154,6 +2270,7 @@ export class UserDto implements IUserDto {
     userProfileId?: number | undefined;
     roleId?: number | undefined;
     mentorId?: number | undefined;
+    isBanned?: boolean;
 
     constructor(data?: IUserDto) {
         if (data) {
@@ -2177,6 +2294,7 @@ export class UserDto implements IUserDto {
             this.userProfileId = _data["userProfileId"];
             this.roleId = _data["roleId"];
             this.mentorId = _data["mentorId"];
+            this.isBanned = _data["isBanned"];
         }
     }
 
@@ -2200,6 +2318,7 @@ export class UserDto implements IUserDto {
         data["userProfileId"] = this.userProfileId;
         data["roleId"] = this.roleId;
         data["mentorId"] = this.mentorId;
+        data["isBanned"] = this.isBanned;
         return data;
     }
 }
@@ -2216,6 +2335,7 @@ export interface IUserDto {
     userProfileId?: number | undefined;
     roleId?: number | undefined;
     mentorId?: number | undefined;
+    isBanned?: boolean;
 }
 
 export interface FileParameter {

@@ -171,7 +171,7 @@ export default function Profile() {
   const handleApproveMentee = async (menteeId: number) => {
     try {
       await apiClient.pendingMentees(menteeId, true);
-      notify.success('Менти одобрен');
+      notify.success('Mentee approved');
       loadMentees();
       loadPendingMentees();
     } catch (error) {
@@ -182,7 +182,7 @@ export default function Profile() {
   const handleRejectMentee = async (menteeId: number) => {
     try {
       await apiClient.pendingMentees(menteeId, false);
-      notify.success('Заявка отклонена');
+      notify.success('Request rejected');
       loadPendingMentees();
     } catch (error) {
       handleApiError(error);
@@ -221,7 +221,7 @@ export default function Profile() {
       const formToSubmit = new ProfileUpdateValuesDto();
       Object.assign(formToSubmit, editForm);
       await apiClient.profileInfoPOST(formToSubmit);
-      notify.success('Профиль успешно обновлен');
+      notify.success('Profile updated successfully');
       // Перезагружаем данные пользователя
       const updatedUser = await apiClient.profileInfoGET(editForm.userId);
       setUser(updatedUser);
@@ -270,7 +270,7 @@ export default function Profile() {
               />
               <img
                 src={getAvatarUrl()}
-                alt="Аватар"
+                alt="Avatar"
                 className="w-32 h-32 rounded-lg object-cover border"
                 style={uploading ? { opacity: 0.5 } : {}}
               />
@@ -297,7 +297,7 @@ export default function Profile() {
             {isEditing ? (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Имя пользователя</label>
+                  <label className="block text-sm font-medium mb-1">Username</label>
                   <input
                     type="text"
                     name="username"
@@ -309,7 +309,7 @@ export default function Profile() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Описание</label>
+                  <label className="block text-sm font-medium mb-1">Description</label>
                   <textarea
                     name="description"
                     value={editForm.description}
@@ -321,7 +321,7 @@ export default function Profile() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Новый пароль</label>
+                  <label className="block text-sm font-medium mb-1">New Password</label>
                   <input
                     type="password"
                     name="newPassword"
@@ -333,7 +333,7 @@ export default function Profile() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Подтвердите текущий пароль</label>
+                  <label className="block text-sm font-medium mb-1">Confirm Current Password</label>
                   <input
                     type="password"
                     name="confirmCurrentPassword"
@@ -352,7 +352,7 @@ export default function Profile() {
                       theme === 'dark' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
                     } text-white disabled:opacity-50`}
                   >
-                    {isSaving ? 'Сохранение...' : 'Сохранить'}
+                    {isSaving ? 'Saving...' : 'Save'}
                   </button>
                   <button
                     onClick={handleCancelEdit}
@@ -360,7 +360,7 @@ export default function Profile() {
                       theme === 'dark' ? 'bg-gray-600 hover:bg-gray-700' : 'bg-gray-500 hover:bg-gray-600'
                     } text-white`}
                   >
-                    Отмена
+                    Cancel
                   </button>
                 </div>
               </div>
@@ -370,7 +370,7 @@ export default function Profile() {
                   <div>
                     <h1 className="text-2xl font-bold mb-2">{user?.username}</h1>
                     <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                      {user?.description || 'Нет описания'}
+                      {user?.description || 'No description'}
                     </p>
                   </div>
                   <button
@@ -379,16 +379,16 @@ export default function Profile() {
                       theme === 'dark' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
                     } text-white`}
                   >
-                    Редактировать профиль
+                    Edit Profile
                   </button>
                 </div>
                 <div className="flex items-center gap-4 mt-2">
                   <div className={`px-4 py-2 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
-                    <span className="text-sm font-medium">Ранг:</span>
-                    <span className="ml-2 font-bold text-blue-500">Новичок</span>
+                    <span className="text-sm font-medium">Rank:</span>
+                    <span className="ml-2 font-bold text-blue-500">Beginner</span>
                   </div>
                   <div className={`px-4 py-2 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
-                    <span className="text-sm font-medium">Рейтинг:</span>
+                    <span className="text-sm font-medium">Rating:</span>
                     <span className="ml-2 font-bold text-green-500">1000</span>
                   </div>
                 </div>
@@ -427,7 +427,7 @@ export default function Profile() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Мой ментор */}
         <div className={`rounded-lg shadow-md p-6 ${theme === 'dark' ? 'bg-surface-dark' : 'bg-white'}`}>
-          <h2 className={`text-xl font-semibold mb-4 ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>Мой ментор</h2>
+          <h2 className={`text-xl font-semibold mb-4 ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>My Mentor</h2>
           {isLoadingMentor ? (
             <LoadingSpinner />
           ) : mentor ? (
@@ -439,7 +439,7 @@ export default function Profile() {
               />
               <div className="text-center">
                 <p className="font-medium text-lg">{mentorProfile?.username || mentor.userId}</p>
-                <p className="text-sm text-gray-500">Опыт: {mentor.experience} лет</p>
+                <p className="text-sm text-gray-500">Experience: {mentor.experience} years</p>
                 <p className="text-sm text-gray-500 mt-2">{mentor.about}</p>
               </div>
               <button
@@ -447,17 +447,17 @@ export default function Profile() {
                 className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
               >
                 <ChatBubbleLeftRightIcon className="w-5 h-5" />
-                <span>Чат с ментором</span>
+                <span>Chat with mentor</span>
               </button>
             </div>
           ) : (
-            <p className={`text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>У вас пока нет ментора</p>
+            <p className={`text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>You don't have a mentor yet</p>
           )}
         </div>
 
         {/* Менти */}
         <div className={`rounded-lg shadow-md p-6 md:col-span-2 ${theme === 'dark' ? 'bg-surface-dark' : 'bg-white'}`}>
-          <h2 className={`text-xl font-semibold mb-4 ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>Мои менти</h2>
+          <h2 className={`text-xl font-semibold mb-4 ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>My Mentees</h2>
           {isLoadingMentees ? (
             <div className="flex justify-center"><LoadingSpinner /></div>
           ) : mentees.length > 0 ? (
@@ -479,7 +479,7 @@ export default function Profile() {
                     <button
                       onClick={() => handleStartChat(mentee.userId!)}
                       className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                      title="Начать чат"
+                      title="Start chat"
                     >
                       <ChatBubbleLeftRightIcon className="w-5 h-5" />
                     </button>
@@ -488,11 +488,11 @@ export default function Profile() {
               ))}
             </div>
           ) : (
-            <p className={`text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>У вас пока нет менти</p>
+            <p className={`text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>You don't have any mentees yet</p>
           )}
 
           {/* Pending mentees */}
-          <h3 className="text-lg font-semibold mt-8 mb-4">Ожидают подтверждения</h3>
+          <h3 className="text-lg font-semibold mt-8 mb-4">Pending requests</h3>
           {isLoadingPending ? (
             <div className="flex justify-center"><LoadingSpinner /></div>
           ) : pendingMentees.length > 0 ? (
@@ -530,7 +530,7 @@ export default function Profile() {
               ))}
             </div>
           ) : (
-            <p className={`text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Нет заявок на рассмотрение</p>
+            <p className={`text-center ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>No pending requests</p>
           )}
         </div>
       </div>

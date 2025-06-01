@@ -6,6 +6,7 @@ import GitHubButton from './GitHubButton';
 import TelegramButton from './TelegramButton';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { LoginDto } from '../../services/api.generated';
+import { notify, handleApiError } from '../../utils/notifications';
 
 export default function LoginForm() {
   const { theme } = useTheme();
@@ -40,7 +41,8 @@ export default function LoginForm() {
       await login(loginDto);
       navigate('/');
     } catch (error) {
-      setErrors(['Invalid credentials. Please try again.']);
+      handleApiError(error);
+      setErrors(['Не удалось войти в систему. Пожалуйста, проверьте свои учетные данные.']);
     } finally {
       setIsLoading(false);
     }

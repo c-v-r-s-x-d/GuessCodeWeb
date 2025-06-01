@@ -3,7 +3,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { ShieldCheckIcon, UserIcon, CodeBracketIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 import { apiClient } from '../services/apiClient';
-import { MentorDto, KataDto } from '../services/api.generated';
+import { MentorDto, KataDto, ChangeUserRoleDto, UserDto } from '../services/api.generated';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { getLanguageLabel } from '../utils/enumHelpers';
 import { notify, handleApiError } from '../utils/notifications';
@@ -35,10 +35,10 @@ export default function AdminPanel() {
   useEffect(() => {
     const checkAdminStatus = async () => {
       try {
-        // TODO: Добавить API для проверки статуса администратора
+        // TODO: Add API for checking admin status
         // const response = await apiClient.api.checkAdminStatus();
         // setIsAdmin(response.data.isAdmin);
-        setIsAdmin(true); // Временное решение
+        setIsAdmin(true); // Temporary solution
       } catch (error) {
         console.error('Error checking admin status:', error);
         setIsAdmin(false);
@@ -267,25 +267,63 @@ export default function AdminPanel() {
   );
 }
 
-// Компоненты для остальных табов
 function UsersTab() {
   const { theme } = useTheme();
-  const [users, setUsers] = useState([
-    { id: 1, name: 'user1', email: 'user1@example.com', status: 'active', lastLogin: '2024-03-01' },
-    { id: 2, name: 'user2', email: 'user2@example.com', status: 'blocked', lastLogin: '2024-02-15' },
-  ]);
+  const [users, setUsers] = useState<UserDto[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleBlock = (id: number) => {
-    setUsers(users.map(u => 
-      u.id === id ? { ...u, status: 'blocked' } : u
-    ));
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const response = await apiClient.all();
+      setUsers(response);
+    } catch (error) {
+      handleApiError(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleUnblock = (id: number) => {
-    setUsers(users.map(u => 
-      u.id === id ? { ...u, status: 'active' } : u
-    ));
+  const handleBan = async (userId: number) => {
+    try {
+      await apiClient.ban(userId);
+      await fetchUsers();
+      notify.success('User has been successfully banned');
+    } catch (error) {
+      handleApiError(error);
+    }
   };
+
+  const handleUnban = async (userId: number) => {
+    try {
+      await apiClient.unban(userId);
+      await fetchUsers();
+      notify.success('User has been successfully unbanned');
+    } catch (error) {
+      handleApiError(error);
+    }
+  };
+
+  const handleRoleChange = async (userId: number, newRole: string) => {
+    try {
+      const dto = new ChangeUserRoleDto({
+        userId: userId,
+        roleName: newRole
+      });
+      await apiClient.role(dto);
+      await fetchUsers();
+      notify.success('User role has been successfully changed');
+    } catch (error) {
+      handleApiError(error);
+    }
+  };
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <div>
@@ -300,31 +338,54 @@ function UsersTab() {
             <div className="flex justify-between items-center">
               <div>
                 <p className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'}`}>
-                  {user.name}
+                  {user.username}
                 </p>
                 <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                   {user.email}
                 </p>
                 <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Last login: {user.lastLogin}
+                  Role: {user.roleId === 1 ? 'User' : user.roleId === 2 ? 'Moderator' : 'Administrator'}
+                </p>
+                <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Status: {user.isBanned ? (
+                    <span className="text-red-500">Banned</span>
+                  ) : (
+                    <span className="text-green-500">Active</span>
+                  )}
                 </p>
               </div>
-              <div>
-                {user.status === 'active' ? (
-                  <button
-                    onClick={() => handleBlock(user.id)}
-                    className="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700"
+              <div className="flex flex-col space-y-2">
+                <div className="flex space-x-2">
+                  <select
+                    value={user.roleId}
+                    onChange={(e) => handleRoleChange(user.id!, e.target.value)}
+                    className={`px-3 py-1 text-sm rounded
+                      ${theme === 'dark' 
+                        ? 'bg-gray-700 text-gray-200 border-gray-600' 
+                        : 'bg-white text-gray-900 border-gray-300'}`}
                   >
-                    Block
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => handleUnblock(user.id)}
-                    className="px-3 py-1 text-sm font-medium text-white bg-green-600 rounded hover:bg-green-700"
-                  >
-                    Unblock
-                  </button>
-                )}
+                    <option value="1">User</option>
+                    <option value="2">Moderator</option>
+                    <option value="3">Administrator</option>
+                  </select>
+                </div>
+                <div className="flex space-x-2">
+                  {!user.isBanned ? (
+                    <button
+                      onClick={() => handleBan(user.id!)}
+                      className="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700"
+                    >
+                      Ban
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleUnban(user.id!)}
+                      className="px-3 py-1 text-sm font-medium text-white bg-green-600 rounded hover:bg-green-700"
+                    >
+                      Unban
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>

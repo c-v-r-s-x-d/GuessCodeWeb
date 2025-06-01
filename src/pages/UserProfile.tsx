@@ -37,7 +37,7 @@ export default function UserProfile() {
     try {
       setUploading(true);
       await apiClient.avatar({ data: file, fileName: file.name });
-      notify.success('Аватар успешно обновлен');
+      notify.success('Avatar updated successfully');
       if (id) {
         loadUser(parseInt(id));
       }
@@ -94,7 +94,7 @@ export default function UserProfile() {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         <p className={`text-lg ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
-          Пользователь не найден
+          User not found
         </p>
       </div>
     );
@@ -108,7 +108,7 @@ export default function UserProfile() {
           <div className="flex-shrink-0 relative group">
             <img
               src={getAvatarUrl()}
-              alt="Аватар"
+              alt="Avatar"
               className="w-32 h-32 rounded-lg object-cover border"
             />
             <div className={`absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-white
@@ -127,14 +127,14 @@ export default function UserProfile() {
           <div className="flex-grow">
             <div className={`flex flex-col gap-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
               <p className="text-2xl font-bold">{user.username}</p>
-              <p className="text-sm">{user.description || 'Нет описания'}</p>
+              <p className="text-sm">{user.description || 'No description'}</p>
               <div className="flex items-center gap-4 mt-2">
                 <div className={`px-4 py-2 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
-                  <span className="text-sm font-medium">Ранг:</span>
-                  <span className="ml-2 font-bold text-blue-500">Новичок</span>
+                  <span className="text-sm font-medium">Rank:</span>
+                  <span className="ml-2 font-bold text-blue-500">Beginner</span>
                 </div>
                 <div className={`px-4 py-2 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
-                  <span className="text-sm font-medium">Рейтинг:</span>
+                  <span className="text-sm font-medium">Rating:</span>
                   <span className="ml-2 font-bold text-green-500">1000</span>
                 </div>
               </div>

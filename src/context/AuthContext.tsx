@@ -4,6 +4,7 @@ import { tokenService } from '../services/tokenService';
 import { LoginDto, RegisterDto, ProfileInfoDto } from '../services/api.generated';
 import { useNavigate } from 'react-router-dom';
 import { signalRService } from '../services/signalRService';
+import { notify, handleApiError } from '../utils/notifications';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -83,7 +84,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsAuthenticated(!!response);
     } catch (error) {
       console.error('Error loading user:', error);
-      logout();
+      // Только при ошибке 401 делаем логаут
+      if (error.response?.status === 401) {
+        logout();
+      } else {
+        handleApiError(error);
+      }
     }
   };
 
@@ -102,7 +108,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Then load user data
       await loadUser();
     } catch (error) {
-      console.error('Login failed:', error);
+      // Не делаем редирект при ошибке, просто пробрасываем ошибку дальше
+      handleApiError(error);
       throw error;
     }
   };

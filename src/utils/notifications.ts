@@ -28,8 +28,8 @@ export const handleApiError = (error: any) => {
   // Проверяем, является ли ошибка объектом с response (Axios error)
   if (error.response) {
     const status = error.response.status;
-    console.log(status)
     const message = error.response.data?.message || 'An error occurred';
+    const isAuthEndpoint = error.config?.url?.includes('/auth/');
 
     switch (status) {
       case 400:
@@ -39,7 +39,11 @@ export const handleApiError = (error: any) => {
         notify.error('Unauthorized: Please login to continue');
         break;
       case 403:
-        notify.error('Access denied: You don\'t have permission to perform this action');
+        if (isAuthEndpoint) {
+          notify.error('Ваш аккаунт заблокирован. Пожалуйста, обратитесь к администратору.');
+        } else {
+          notify.error('Access denied: You don\'t have permission to perform this action');
+        }
         break;
       case 404:
         notify.error('Resource not found: ' + message);
