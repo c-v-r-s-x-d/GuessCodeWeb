@@ -659,10 +659,6 @@ const CreateKata: React.FC = () => {
           <BugFindingForm formData={formData} setFormData={setFormData} theme={theme} />
         )}
 
-        {formData.kataType === KataType._3 && (
-          <CodeOptimizationForm formData={formData} setFormData={setFormData} theme={theme} />
-        )}
-
         <div className="flex justify-end">
           <button
             type="submit"

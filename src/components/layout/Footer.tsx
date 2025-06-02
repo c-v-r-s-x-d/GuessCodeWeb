@@ -64,9 +64,13 @@ export default function Footer() {
               ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
               Contact
             </h4>
-            <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
-              Email: admin@guess-code.ru
-            </p>
+            <ul className="space-y-2">
+              <li>
+                <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Email: admin@guess-code.ru
+                </p>
+              </li>
+            </ul>
           </div>
         </div>
         

@@ -24,6 +24,7 @@ import {
 import { getDifficultyLabel, getLanguageLabel, getKataTypeLabel } from '../utils/enumHelpers';
 import { Link } from 'react-router-dom';
 import { notify, handleApiError } from '../utils/notifications';
+import { KataReport } from '../components/KataReport';
 
 export default function SolveKata() {
   const { theme } = useTheme();
@@ -35,6 +36,7 @@ export default function SolveKata() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resolvedKata, setResolvedKata] = useState<ResolvedKataDto | null>(null);
+  const [correctOptionId, setCorrectOptionId] = useState<number | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -47,6 +49,9 @@ export default function SolveKata() {
     try {
       const response = await apiClient.kataSearch(kataId);
       setKata(response);
+      if (response.kataType !== KataType._1 && !resolvedKata) {
+        setSourceCode(response.kataJsonContent?.sourceCode || '');
+      }
       Prism.highlightAll();
     } catch (error) {
       console.error('Error loading kata:', error);
@@ -59,6 +64,9 @@ export default function SolveKata() {
       setResolvedKata(response);
       if (response.sourceCode) {
         setSourceCode(response.sourceCode);
+      }
+      if (response.isSuccess && response.selectedOptionId) {
+        setCorrectOptionId(response.selectedOptionId);
       }
     } catch (error) {
       console.error('Error loading resolved kata:', error);
@@ -82,7 +90,8 @@ export default function SolveKata() {
         setResult(response);
         
         if (response.isAnswerCorrect) {
-          notify.success('Поздравляем! Ваш ответ верный!');
+          notify.success('Congratulations! Your answer is correct!');
+          setCorrectOptionId(selectedOption);
         } else {
           notify.warning(response.error || 'Неверный ответ. Попробуйте еще раз.');
         }
@@ -98,7 +107,7 @@ export default function SolveKata() {
         setResult(response);
         
         if (response.isScheduled) {
-          notify.success('Решение отправлено на проверку');
+          notify.success('Solution sent, please come back in a few minutes');
         } else {
           notify.warning('Не удалось отправить решение на проверку');
         }
@@ -138,6 +147,7 @@ export default function SolveKata() {
             >
               by Author #{kata.authorId}
             </Link>
+            <KataReport kataId={kata.id!} />
           </div>
 
           {/* Description */}
@@ -161,13 +171,13 @@ export default function SolveKata() {
           {resolvedKata ? (
             <div className="space-y-6 mb-12">
               <h2 className={`text-lg font-semibold ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
-                Ваше решение
+                Your last solution
               </h2>
               
               {kata.kataType === KataType._1 ? (
                 <div className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
-                  <p className="mb-2">Выбранный вариант: {resolvedKata.selectedOptionId}</p>
-                  <p>Заработано очков: {resolvedKata.pointEarned}</p>
+                  <p className="mb-2">Selected option: {resolvedKata.selectedOptionId}</p>
+                  <p>Points earned: {50/*resolvedKata.pointEarned*/}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -177,12 +187,56 @@ export default function SolveKata() {
                     </code>
                   </pre>
                   {resolvedKata.executionOutput && (
-                    <div className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
-                      <p className="mb-2">Результат выполнения:</p>
+                    <div className={`p-4 rounded-lg ${
+                      resolvedKata.isSuccess 
+                        ? theme === 'dark' ? 'bg-green-900/30' : 'bg-green-50'
+                        : theme === 'dark' ? 'bg-red-900/30' : 'bg-red-50'
+                    }`}>
+                      <p className={`mb-2 ${
+                        resolvedKata.isSuccess
+                          ? theme === 'dark' ? 'text-green-300' : 'text-green-800'
+                          : theme === 'dark' ? 'text-red-300' : 'text-red-800'
+                      }`}>
+                        Execution result:
+                      </p>
                       <pre className="whitespace-pre-wrap">{resolvedKata.executionOutput}</pre>
                     </div>
                   )}
-                  <p>Заработано очков: {resolvedKata.pointEarned}</p>
+                  <p>Points earned: {resolvedKata.pointEarned + 50}</p>
+                </div>
+              )}
+
+              {/* Показываем новое поле для ввода только если решение было неуспешным */}
+              {!resolvedKata.isSuccess && kata.kataType !== KataType._1 && (
+                <div className="mt-8">
+                  <h2 className={`text-lg font-semibold mb-4 ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
+                    Try again
+                  </h2>
+                  <div className="space-y-4">
+                    <textarea
+                      value={sourceCode}
+                      onChange={(e) => setSourceCode(e.target.value)}
+                      rows={10}
+                      className={`w-full px-3 py-2 rounded-lg font-mono text-sm
+                        ${theme === 'dark' 
+                          ? 'bg-gray-800 text-gray-200 border-gray-700' 
+                          : 'bg-white text-gray-800 border-gray-300'}`}
+                      placeholder="Enter your new solution..."
+                    />
+                    <button
+                      onClick={handleSubmit}
+                      disabled={isSubmitting || !sourceCode}
+                      className={`w-full py-3 rounded-lg text-white font-semibold transition-colors
+                        ${isSubmitting || !sourceCode
+                          ? 'bg-gray-400 cursor-not-allowed'
+                          : theme === 'dark'
+                            ? 'bg-primary-dark hover:bg-blue-500'
+                            : 'bg-primary hover:bg-blue-700'
+                        }`}
+                    >
+                      {isSubmitting ? 'Pending...' : 'Submit new solution'}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -194,18 +248,26 @@ export default function SolveKata() {
                   {kata.kataJsonContent?.answerOptions?.map((option) => (
                     <button
                       key={option.optionId}
-                      onClick={() => setSelectedOption(option.optionId!)}
+                      onClick={() => !correctOptionId && setSelectedOption(option.optionId!)}
                       className={`w-full p-4 text-left rounded-lg border transition-colors
                         ${selectedOption === option.optionId
                           ? theme === 'dark' 
                             ? 'bg-primary-dark text-white'
                             : 'bg-primary text-white'
-                          : theme === 'dark'
-                            ? 'bg-surface-dark hover:bg-gray-700'
-                            : 'bg-white hover:bg-gray-50'
+                          : correctOptionId === option.optionId
+                            ? theme === 'dark'
+                              ? 'bg-green-900/30 text-green-300 border-green-500'
+                              : 'bg-green-50 text-green-800 border-green-500'
+                            : theme === 'dark'
+                              ? 'bg-surface-dark hover:bg-gray-700'
+                              : 'bg-white hover:bg-gray-50'
                         }`}
+                      disabled={!!correctOptionId}
                     >
                       {option.option}
+                      {correctOptionId === option.optionId && (
+                        <span className="ml-2 text-sm">✓ Correct answer </span>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -220,23 +282,23 @@ export default function SolveKata() {
                       ${theme === 'dark' 
                         ? 'bg-gray-800 text-gray-200 border-gray-700' 
                         : 'bg-white text-gray-800 border-gray-300'}`}
-                    placeholder="Введите ваш код решения..."
+                    placeholder="Enter your solution..."
                   />
                 </div>
               )}
               
               <button
                 onClick={handleSubmit}
-                disabled={isSubmitting || (kata.kataType === KataType._1 ? !selectedOption : !sourceCode)}
+                disabled={isSubmitting || (kata.kataType === KataType._1 ? (!selectedOption || !!correctOptionId) : !sourceCode)}
                 className={`w-full py-3 rounded-lg text-white font-semibold transition-colors
-                  ${isSubmitting || (kata.kataType === KataType._1 ? !selectedOption : !sourceCode)
+                  ${isSubmitting || (kata.kataType === KataType._1 ? (!selectedOption || !!correctOptionId) : !sourceCode)
                     ? 'bg-gray-400 cursor-not-allowed'
                     : theme === 'dark'
                       ? 'bg-primary-dark hover:bg-blue-500'
                       : 'bg-primary hover:bg-blue-700'
                   }`}
               >
-                {isSubmitting ? 'Отправка...' : 'Отправить решение'}
+                {correctOptionId ? 'Kata resolved' : isSubmitting ? 'Pending...' : 'Submit solution'}
               </button>
             </div>
           )}
@@ -279,7 +341,7 @@ export default function SolveKata() {
               {kata.kataType === KataType._1 && (result as KataCodeReadingSolveResultDto).pointsEarned && (
                 <p className={`mt-2
                   ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Заработано очков: {(result as KataCodeReadingSolveResultDto).pointsEarned}
+                  Points earned: {50/*{(result as KataCodeReadingSolveResultDto).pointsEarned}*/}
                 </p>
               )}
             </div>

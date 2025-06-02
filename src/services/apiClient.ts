@@ -13,6 +13,7 @@ const customFetch = async (url: RequestInfo, init?: RequestInit): Promise<Respon
   try {
     const token = tokenService.getToken();
     const userId = tokenService.getUserId();
+    const isProfileEndpoint = url.toString().includes('/profile-info');
 
     // Добавляем заголовки авторизации
     const headers = new Headers(init?.headers);
@@ -38,18 +39,32 @@ const customFetch = async (url: RequestInfo, init?: RequestInit): Promise<Respon
       mode: 'cors'
     });
     
-    // Обрабатываем 401 только для не-профильных эндпоинтов
-    if (response.status === 401 && !url.toString().includes('/profile-info')) {
+    // Обрабатываем 401 для всех эндпоинтов, кроме публичных
+    if (response.status === 401 && !isProfileEndpoint) {
       tokenService.removeTokenData();
       window.dispatchEvent(new Event('auth:logout'));
-      throw new Error('Unauthorized access');
+      const error: ApiError = new Error('Unauthorized access');
+      error.status = 401;
+      throw error;
     }
     
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = { message: 'Network response was not ok' };
+      }
+      
       const error: ApiError = new Error(errorData.message || 'Network response was not ok');
       error.status = response.status;
       error.data = errorData;
+      
+      // Для профильных эндпоинтов добавляем специальную обработку
+      if (isProfileEndpoint && response.status === 401) {
+        error.message = 'Please login to view this profile';
+      }
+      
       throw error;
     }
     
@@ -58,7 +73,9 @@ const customFetch = async (url: RequestInfo, init?: RequestInit): Promise<Respon
     if (error instanceof Error) {
       throw error;
     }
-    throw new Error('An unexpected error occurred');
+    const apiError: ApiError = new Error('An unexpected error occurred');
+    apiError.status = 500;
+    throw apiError;
   }
 };
 

@@ -45,8 +45,6 @@ export const getKataTypeLabel = (type: KataType): string => {
       return 'Code Reading';
     case KataType._2:
       return 'Bug Finding';
-    case KataType._3:
-      return 'Code Optimization';
     default:
       return 'Unknown';
   }
@@ -70,15 +68,15 @@ export const getPrismLanguage = (language: ProgrammingLanguage): string => {
 export function getMentorAvailabilityLabel(availability: MentorAvailability): string {
   switch (availability) {
     case 0: // OneHourPerWeek
-      return '1 час в неделю';
+      return '1 hour per week';
     case 1: // TwoHoursPerWeek
-      return '2 часа в неделю';
+      return '2 hours per week';
     case 2: // ThreeHoursPerWeek
-      return '3 часа в неделю';
+      return '3 hours per week';
     case 3: // FourHoursPerWeek
-      return '4 часа в неделю';
+      return '4 hours per week';
     case 4: // MoreHoursPerWeek
-      return 'Более 4 часов в неделю';
+      return 'More hour per week';
     default:
       return 'Неизвестно';
   }

@@ -99,7 +99,7 @@ export default function Katas() {
                 </span>
                 {resolvedKatas.includes(featuredKata.id!) && (
                   <span className="px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
-                    Решено
+                    Completed
                   </span>
                 )}
               </div>
@@ -131,7 +131,7 @@ export default function Katas() {
                 ? 'bg-primary-dark hover:bg-blue-500' 
                 : 'bg-primary hover:bg-blue-700'}`}
           >
-            {resolvedKatas.includes(featuredKata.id!) ? 'Просмотреть решение' : 'Начать решение'}
+            {resolvedKatas.includes(featuredKata.id!) ? 'Check my solution' : 'Challenge'}
           </Link>
         </div>
       )}
@@ -229,7 +229,7 @@ export default function Katas() {
                   </span>
                   {resolvedKatas.includes(kata.id!) && (
                     <span className="px-2 py-1 text-sm rounded bg-green-100 text-green-800">
-                      Решено
+                      Completed
                     </span>
                   )}
                 </div>

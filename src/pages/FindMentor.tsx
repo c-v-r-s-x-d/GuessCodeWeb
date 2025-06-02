@@ -237,7 +237,7 @@ export default function FindMentor() {
                       </h3>
                       <div className={`px-2 py-1 rounded-full text-sm
                         ${theme === 'dark' ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-800'}`}>
-                        {mentor.rating?.toFixed(1) || '0.0'} ★
+                        {mentor.rating?.toFixed(1) || '5.0'} ★
                       </div>
                     </div>
                     

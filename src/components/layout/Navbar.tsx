@@ -2,10 +2,29 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import ThemeToggle from '../common/ThemeToggle';
 import { useTheme } from '../../context/ThemeContext';
+import { apiClient } from '../../services/apiClient';
+import { useState, useEffect } from 'react';
+import { UserDto } from '../../services/api.generated';
 
 export default function Navbar() {
   const { isAuthenticated, logout, user } = useAuth();
   const { theme } = useTheme();
+  const [userData, setUserData] = useState<UserDto | null>(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (user?.userId) {
+        try {
+          const currentUser = await apiClient.user(user.userId);
+          setUserData(currentUser);
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      }
+    };
+
+    fetchUserData();
+  }, [user]);
 
   const getAvatarUrl = () => {
     if (user?.avatarUrl) {
@@ -24,7 +43,7 @@ export default function Navbar() {
       ${theme === 'dark' ? 'bg-surface-dark/80' : 'bg-surface-light/50'}`}>
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-10">
-          <Link to="/" className={`font-bold text-base ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
+          <Link to="/" className={`font-bold text-base text-text-dark`}>
             GuessCode
           </Link>
 
@@ -46,9 +65,11 @@ export default function Navbar() {
                 <Link to="/become-mentor" className={`text-sm ${linkClass}`}>
                   Become Mentor
                 </Link>
-                <Link to="/admin" className={`text-sm ${linkClass}`}>
-                  Administration
-                </Link>
+                {userData?.roleId === 1 && (
+                  <Link to="/admin" className={`text-sm ${linkClass}`}>
+                    Administration
+                  </Link>
+                )}
                 <div className="relative group">
                   <button 
                     className={`flex items-center gap-2 text-sm ${linkClass} py-1`}

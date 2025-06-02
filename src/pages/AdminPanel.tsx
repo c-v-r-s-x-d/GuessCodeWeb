@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { ShieldCheckIcon, UserIcon, CodeBracketIcon, LockClosedIcon } from '@heroicons/react/24/outline';
+import { ShieldCheckIcon, UserIcon, CodeBracketIcon, LockClosedIcon, ChatBubbleLeftIcon } from '@heroicons/react/24/outline';
 import { apiClient } from '../services/apiClient';
 import { MentorDto, KataDto, ChangeUserRoleDto, UserDto } from '../services/api.generated';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import { getLanguageLabel } from '../utils/enumHelpers';
+import { getLanguageLabel, getDifficultyLabel, getKataTypeLabel } from '../utils/enumHelpers';
 import { notify, handleApiError } from '../utils/notifications';
+import { KataReportsPanel } from '../components/admin/KataReportsPanel';
+import { FeedbackPanel } from '../components/admin/FeedbackPanel';
+import { Link } from 'react-router-dom';
 
-type TabType = 'mentors' | 'users' | 'katas' | 'reports';
+type TabType = 'mentors' | 'users' | 'katas' | 'reports' | 'feedback';
 
 interface Tab {
   id: TabType;
@@ -21,6 +24,7 @@ const tabs: Tab[] = [
   { id: 'users', name: 'Users', icon: UserIcon },
   { id: 'katas', name: 'Katas', icon: CodeBracketIcon },
   { id: 'reports', name: 'Reports', icon: LockClosedIcon },
+  { id: 'feedback', name: 'Feedback', icon: ChatBubbleLeftIcon },
 ];
 
 export default function AdminPanel() {
@@ -31,6 +35,9 @@ export default function AdminPanel() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [mentors, setMentors] = useState<MentorDto[]>([]);
   const [pendingKatas, setPendingKatas] = useState<KataDto[]>([]);
+  const [selectedKata, setSelectedKata] = useState<KataDto | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -82,12 +89,26 @@ export default function AdminPanel() {
 
   const handleKataAction = async (kataId: number, isApproved: boolean) => {
     try {
+      setActionLoading(true);
       await apiClient.pendingKatas(kataId, isApproved);
       setPendingKatas(pendingKatas.filter(kata => kata.id !== kataId));
       notify.success(`Kata ${isApproved ? 'approved' : 'rejected'} successfully`);
+      setIsDialogOpen(false);
     } catch (error) {
       handleApiError(error);
+    } finally {
+      setActionLoading(false);
     }
+  };
+
+  const handleViewKata = (kata: KataDto) => {
+    setSelectedKata(kata);
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setSelectedKata(null);
   };
 
   if (!isAdmin) {
@@ -128,7 +149,15 @@ export default function AdminPanel() {
                       <div>
                         <h3 className={`font-medium
                           ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
-                          User ID: {mentor.userId}
+                          <Link 
+                            to={`/user/${mentor.userId}`}
+                            className={`hover:underline
+                              ${theme === 'dark' 
+                                ? 'text-blue-400 hover:text-blue-300' 
+                                : 'text-blue-600 hover:text-blue-500'}`}
+                          >
+                            User ID: {mentor.userId}
+                          </Link>
                         </h3>
                         <p className={`mt-1
                           ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -197,10 +226,15 @@ export default function AdminPanel() {
                           ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                           Programming Language: {getLanguageLabel(kata.programmingLanguage!)}
                         </p>
-                        <p className={`mt-1
-                          ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                          Description: {kata.kataJsonContent?.kataDescription}
-                        </p>
+                        <button
+                          onClick={() => handleViewKata(kata)}
+                          className={`mt-2 px-3 py-1 rounded-lg font-medium
+                            ${theme === 'dark'
+                              ? 'bg-blue-600 text-white hover:bg-blue-700'
+                              : 'bg-blue-500 text-white hover:bg-blue-600'}`}
+                        >
+                          Review
+                        </button>
                       </div>
                       <div className="flex space-x-2">
                         <button
@@ -221,10 +255,108 @@ export default function AdminPanel() {
                 ))}
               </div>
             )}
+
+            {isDialogOpen && selectedKata && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className={`max-w-4xl w-full mx-4 rounded-lg shadow-xl
+                  ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
+                  <div className="p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <h3 className={`text-lg font-semibold
+                        ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'}`}>
+                        {selectedKata.title}
+                      </h3>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex flex-wrap gap-2">
+                        {selectedKata.programmingLanguage && (
+                          <span className={`px-3 py-1 rounded-full text-sm
+                            ${theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-800'}`}>
+                            {getLanguageLabel(selectedKata.programmingLanguage)}
+                          </span>
+                        )}
+                        {selectedKata.kataDifficulty && (
+                          <span className={`px-3 py-1 rounded-full text-sm
+                            ${theme === 'dark' ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-800'}`}>
+                            {getDifficultyLabel(selectedKata.kataDifficulty)}
+                          </span>
+                        )}
+                        {selectedKata.kataType && (
+                          <span className={`px-3 py-1 rounded-full text-sm
+                            ${theme === 'dark' ? 'bg-purple-900 text-purple-300' : 'bg-purple-100 text-purple-800'}`}>
+                            {getKataTypeLabel(selectedKata.kataType)}
+                          </span>
+                        )}
+                      </div>
+
+                      <div>
+                        <h4 className={`text-sm font-medium mb-2
+                          ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                          Описание:
+                        </h4>
+                        <p className={`text-sm
+                          ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                          {selectedKata.kataJsonContent?.kataDescription}
+                        </p>
+                      </div>
+
+                      {selectedKata.kataJsonContent?.sourceCode && (
+                        <div>
+                          <h4 className={`text-sm font-medium mb-2
+                            ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                            Исходный код:
+                          </h4>
+                          <pre className={`p-4 rounded-lg text-sm overflow-x-auto
+                            ${theme === 'dark' ? 'bg-gray-900 text-gray-300' : 'bg-gray-50 text-gray-800'}`}>
+                            {selectedKata.kataJsonContent.sourceCode}
+                          </pre>
+                        </div>
+                      )}
+
+                      <div className="flex justify-end space-x-3 mt-6">
+                        <button
+                          onClick={handleCloseDialog}
+                          disabled={actionLoading}
+                          className={`px-4 py-2 rounded-lg font-medium
+                            ${theme === 'dark'
+                              ? 'bg-gray-700 text-gray-200 hover:bg-gray-600 disabled:opacity-50'
+                              : 'bg-gray-100 text-gray-800 hover:bg-gray-200 disabled:opacity-50'}`}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => handleKataAction(selectedKata.id!, false)}
+                          disabled={actionLoading}
+                          className={`px-4 py-2 rounded-lg font-medium text-white
+                            ${theme === 'dark'
+                              ? 'bg-red-600 hover:bg-red-700 disabled:opacity-50'
+                              : 'bg-red-500 hover:bg-red-600 disabled:opacity-50'}`}
+                        >
+                          Decline
+                        </button>
+                        <button
+                          onClick={() => handleKataAction(selectedKata.id!, true)}
+                          disabled={actionLoading}
+                          className={`px-4 py-2 rounded-lg font-medium text-white
+                            ${theme === 'dark'
+                              ? 'bg-green-600 hover:bg-green-700 disabled:opacity-50'
+                              : 'bg-green-500 hover:bg-green-600 disabled:opacity-50'}`}
+                        >
+                          Accept
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
       case 'reports':
         return <ReportsTab />;
+      case 'feedback':
+        return <FeedbackTab />;
       default:
         return null;
     }
@@ -337,14 +469,20 @@ function UsersTab() {
             ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
             <div className="flex justify-between items-center">
               <div>
-                <p className={`font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'}`}>
+                <Link 
+                  to={`/user/${user.id}`}
+                  className={`font-medium hover:underline
+                    ${theme === 'dark' 
+                      ? 'text-blue-400 hover:text-blue-300' 
+                      : 'text-blue-600 hover:text-blue-500'}`}
+                >
                   {user.username}
-                </p>
+                </Link>
                 <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                   {user.email}
                 </p>
                 <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Role: {user.roleId === 1 ? 'User' : user.roleId === 2 ? 'Moderator' : 'Administrator'}
+                  Role: {user.roleId === 1 ? 'Admin' : user.roleId === 2 ? 'Mentor' : 'User'}
                 </p>
                 <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                   Status: {user.isBanned ? (
@@ -365,7 +503,7 @@ function UsersTab() {
                         : 'bg-white text-gray-900 border-gray-300'}`}
                   >
                     <option value="1">User</option>
-                    <option value="2">Moderator</option>
+                    <option value="2">Mentor</option>
                     <option value="3">Administrator</option>
                   </select>
                 </div>
@@ -396,58 +534,9 @@ function UsersTab() {
 }
 
 function ReportsTab() {
-  const { theme } = useTheme();
-  const [reports, setReports] = useState([
-    { id: 1, type: 'spam', target: 'user1', reporter: 'user2', status: 'pending' },
-    { id: 2, type: 'inappropriate', target: 'kata1', reporter: 'user3', status: 'resolved' },
-  ]);
+  return <KataReportsPanel />;
+}
 
-  const handleResolve = (id: number) => {
-    setReports(reports.map(r => 
-      r.id === id ? { ...r, status: 'resolved' } : r
-    ));
-  };
-
-  return (
-    <div>
-      <h2 className={`text-xl font-semibold mb-4
-        ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
-        Reports and Complaints
-      </h2>
-      <div className="space-y-4">
-        {reports.map((report) => (
-          <div key={report.id} className={`p-4 rounded-lg
-            ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}`}>
-            <div className="flex justify-between items-center">
-              <div>
-                <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Type: {report.type}
-                </p>
-                <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Target: {report.target}
-                </p>
-                <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Reporter: {report.reporter}
-                </p>
-              </div>
-              <div>
-                {report.status === 'pending' ? (
-                  <button
-                    onClick={() => handleResolve(report.id)}
-                    className="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700"
-                  >
-                    Resolve
-                  </button>
-                ) : (
-                  <span className="px-3 py-1 text-sm font-medium text-white bg-green-600 rounded">
-                    Resolved
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+function FeedbackTab() {
+  return <FeedbackPanel />;
 }

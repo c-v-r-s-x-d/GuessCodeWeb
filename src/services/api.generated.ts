@@ -256,6 +256,126 @@ export class Client {
     }
 
     /**
+     * @param body (optional) 
+     * @return Success
+     */
+    kataReport(body: ReportKataDto | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/api/feedback/kata-report";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processKataReport(_response);
+        });
+    }
+
+    protected processKataReport(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @param body (optional) 
+     * @return Success
+     */
+    feedback(body: FeedbackDto | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/api/feedback";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processFeedback(_response);
+        });
+    }
+
+    protected processFeedback(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return Success
+     */
+    feedbackAll(): Promise<FeedbackDto[]> {
+        let url_ = this.baseUrl + "/api/feedback";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "text/plain"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processFeedbackAll(_response);
+        });
+    }
+
+    protected processFeedbackAll(response: Response): Promise<FeedbackDto[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(FeedbackDto.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<FeedbackDto[]>(null as any);
+    }
+
+    /**
      * @param uploadInStaticFolder (optional) 
      * @param file (optional) 
      * @return Success
@@ -320,9 +440,7 @@ export class Client {
             throw new Error("The parameter 'kataDtoRaw' cannot be null.");
         else
             content_.append("kataDtoRaw", kataDtoRaw.toString());
-        if (file === null || file === undefined)
-            throw new Error("The parameter 'file' cannot be null.");
-        else
+        if (file !== null && file !== undefined)
             content_.append("file", file.data, file.fileName ? file.fileName : "file");
 
         let options_: RequestInit = {
@@ -501,6 +619,88 @@ export class Client {
     }
 
     protected processPendingKatas(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return Success
+     */
+    reportedKatasAll(): Promise<ReportKataDto[]> {
+        let url_ = this.baseUrl + "/api/kata-administration/reported-katas";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "text/plain"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processReportedKatasAll(_response);
+        });
+    }
+
+    protected processReportedKatasAll(response: Response): Promise<ReportKataDto[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(ReportKataDto.fromJS(item));
+            }
+            else {
+                result200 = <any>null;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ReportKataDto[]>(null as any);
+    }
+
+    /**
+     * @param kataId (optional) 
+     * @return Success
+     */
+    reportedKatas(kataId: number | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/api/kata-administration/reported-katas?";
+        if (kataId === null)
+            throw new Error("The parameter 'kataId' cannot be null.");
+        else if (kataId !== undefined)
+            url_ += "kataId=" + encodeURIComponent("" + kataId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "PUT",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processReportedKatas(_response);
+        });
+    }
+
+    protected processReportedKatas(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -1507,6 +1707,42 @@ export interface IChangeUserRoleDto {
     roleName?: string;
 }
 
+export class FeedbackDto implements IFeedbackDto {
+    message?: string;
+
+    constructor(data?: IFeedbackDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.message = _data["message"];
+        }
+    }
+
+    static fromJS(data: any): FeedbackDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new FeedbackDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["message"] = this.message;
+        return data;
+    }
+}
+
+export interface IFeedbackDto {
+    message?: string;
+}
+
 export class KataBugFindingAnswerDto implements IKataBugFindingAnswerDto {
     kataId?: number;
     sourceCode?: string;
@@ -1828,8 +2064,7 @@ export interface IKataJsonContent {
 
 export enum KataType {
     _1 = 1,
-    _2 = 2,
-    _3 = 3,
+    _2 = 2
 }
 
 export class LeaderboardPositionDto implements ILeaderboardPositionDto {
@@ -2162,6 +2397,50 @@ export interface IRegisterDto {
     password?: string;
 }
 
+export class ReportKataDto implements IReportKataDto {
+    kataId?: number;
+    reason?: string;
+    userId?: number;
+
+    constructor(data?: IReportKataDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (<any>this)[property] = (<any>data)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.kataId = _data["kataId"];
+            this.reason = _data["reason"];
+            this.userId = _data["userId"];
+        }
+    }
+
+    static fromJS(data: any): ReportKataDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new ReportKataDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["kataId"] = this.kataId;
+        data["reason"] = this.reason;
+        data["userId"] = this.userId;
+        return data;
+    }
+}
+
+export interface IReportKataDto {
+    kataId?: number;
+    reason?: string;
+    userId?: number;
+}
+
 export class ResolvedKataDto implements IResolvedKataDto {
     kataId?: number;
     resolvedUserId?: number;
@@ -2169,6 +2448,7 @@ export class ResolvedKataDto implements IResolvedKataDto {
     sourceCode?: string | undefined;
     selectedOptionId?: number | undefined;
     executionOutput?: string | undefined;
+    isSuccess?: boolean;
 
     constructor(data?: IResolvedKataDto) {
         if (data) {
@@ -2187,6 +2467,7 @@ export class ResolvedKataDto implements IResolvedKataDto {
             this.sourceCode = _data["sourceCode"];
             this.selectedOptionId = _data["selectedOptionId"];
             this.executionOutput = _data["executionOutput"];
+            this.isSuccess = _data["isSuccess"];
         }
     }
 
@@ -2205,6 +2486,7 @@ export class ResolvedKataDto implements IResolvedKataDto {
         data["sourceCode"] = this.sourceCode;
         data["selectedOptionId"] = this.selectedOptionId;
         data["executionOutput"] = this.executionOutput;
+        data["isSuccess"] = this.isSuccess;
         return data;
     }
 }
@@ -2216,6 +2498,7 @@ export interface IResolvedKataDto {
     sourceCode?: string | undefined;
     selectedOptionId?: number | undefined;
     executionOutput?: string | undefined;
+    isSuccess?: boolean;
 }
 
 export class TokenDto implements ITokenDto {

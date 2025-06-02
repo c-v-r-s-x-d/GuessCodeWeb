@@ -7,6 +7,7 @@ import { notify, handleApiError } from '../utils/notifications';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ChatRoom from '../components/chat/ChatRoom';
 import { ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
+import { Feedback } from '../components/Feedback';
 
 export default function Profile() {
   const { theme } = useTheme();
@@ -373,19 +374,27 @@ export default function Profile() {
                       {user?.description || 'No description'}
                     </p>
                   </div>
-                  <button
-                    onClick={handleEditClick}
-                    className={`px-4 py-2 rounded-md ${
-                      theme === 'dark' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
-                    } text-white`}
-                  >
-                    Edit Profile
-                  </button>
+                  <div className="flex gap-2">
+                    <Feedback 
+                      className={`px-4 py-2 rounded-md font-medium
+                        ${theme === 'dark'
+                          ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}
+                    />
+                    <button
+                      onClick={handleEditClick}
+                      className={`px-4 py-2 rounded-md ${
+                        theme === 'dark' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
+                      } text-white`}
+                    >
+                      Edit Profile
+                    </button>
+                  </div>
                 </div>
                 <div className="flex items-center gap-4 mt-2">
                   <div className={`px-4 py-2 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
                     <span className="text-sm font-medium">Rank:</span>
-                    <span className="ml-2 font-bold text-blue-500">Beginner</span>
+                    <span className="ml-2 font-bold text-blue-500">5th Kyu</span>
                   </div>
                   <div className={`px-4 py-2 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
                     <span className="text-sm font-medium">Rating:</span>
@@ -404,18 +413,7 @@ export default function Profile() {
                     ></div>
                   </div>
                   <div className="text-xs text-gray-500 mt-1">
-                    Remaining 250 points to "Intermediate" rank
-                  </div>
-                </div>
-                <div className="mt-4">
-                  <span className="text-sm font-medium">Programming Languages:</span>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {['JavaScript', 'Python', 'Java'].map((lang) => (
-                      <span key={lang} className={`px-3 py-1 rounded-full text-sm font-medium
-                        ${theme === 'dark' ? 'bg-gray-800 text-blue-400' : 'bg-blue-100 text-blue-800'}`}>
-                        {lang}
-                      </span>
-                    ))}
+                    Remaining 250 points to "4th Kyu" rank
                   </div>
                 </div>
               </>
