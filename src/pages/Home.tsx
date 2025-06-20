@@ -8,21 +8,21 @@ export default function Home() {
   return (
     <div className="relative overflow-hidden min-h-[calc(100vh-7rem)]">
       {/* Content */}
-      <div className="relative z-20 max-w-4xl mx-auto text-center py-16">
-        <h1 className="text-4xl font-bold mb-6 text-white">
+      <div className="relative z-20 max-w-4xl mx-auto text-center py-8 sm:py-16 px-2 sm:px-0">
+        <h1 className="text-2xl sm:text-4xl font-bold mb-4 sm:mb-6 text-white">
           Improve Your Code Reading Skills
         </h1>
-        <p className="text-xl mb-8 text-gray-200">
+        <p className="text-base sm:text-xl mb-4 sm:mb-8 text-gray-200">
           Practice reading and understanding code through interactive challenges
         </p>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
           {['Read & Understand', 'Fix the code', 'Challenge AI', 'Learn', 'Teach', 'Enjoy'].map((title, index) => (
-            <div key={index} className="p-6 rounded-lg shadow-md bg-black/90 backdrop-blur-sm">
-              <h3 className="text-xl font-semibold mb-4 text-white">
+            <div key={index} className="p-3 sm:p-6 rounded-lg shadow-md bg-black/90 backdrop-blur-sm">
+              <h3 className="text-base sm:text-xl font-semibold mb-2 sm:mb-4 text-white">
                 {title}
               </h3>
-              <p className="text-gray-300">
+              <p className="text-gray-300 text-xs sm:text-base">
                 {index === 0 && 'Practice understanding complex code snippets and explain their functionality'}
                 {index === 1 && 'Identify bugs and potential issues in code samples'}
                 {index === 2 && 'Try your hand at coding against AI. Who will win? (Coming soon)'}
@@ -34,9 +34,9 @@ export default function Home() {
           ))}
         </div>
         
-        <div className="mt-12">
+        <div className="mt-8 sm:mt-12">
           <Link to="/challenges" 
-            className="inline-block px-8 py-3 rounded-lg text-lg font-semibold text-white
+            className="inline-block w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg text-base sm:text-lg font-semibold text-white
               bg-primary-dark hover:bg-blue-500 transition-colors">
             Get Started
           </Link>

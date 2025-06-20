@@ -255,12 +255,12 @@ export default function Profile() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className={`rounded-lg shadow-md p-6 mb-8
+    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
+      <div className={`rounded-lg shadow-md p-4 sm:p-6 mb-6 sm:mb-8
         ${theme === 'dark' ? 'bg-surface-dark' : 'bg-white'}`}>
-        <div className="flex items-start gap-8">
-          <div className="flex-shrink-0 relative group">
-            <label className="cursor-pointer block w-32 h-32">
+        <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-8">
+          <div className="flex-shrink-0 relative group mb-4 md:mb-0 flex justify-center w-full md:w-auto">
+            <label className="cursor-pointer block w-24 h-24 sm:w-32 sm:h-32 mx-auto md:mx-0">
               <input
                 type="file"
                 accept="image/*"
@@ -272,7 +272,7 @@ export default function Profile() {
               <img
                 src={getAvatarUrl()}
                 alt="Avatar"
-                className="w-32 h-32 rounded-lg object-cover border"
+                className="w-24 h-24 sm:w-32 sm:h-32 rounded-lg object-cover border mx-auto md:mx-0"
                 style={uploading ? { opacity: 0.5 } : {}}
               />
               <div className={`absolute inset-0 flex items-center justify-center rounded-lg
@@ -294,7 +294,7 @@ export default function Profile() {
             </div>
           </div>
           
-          <div className="flex-grow">
+          <div className="flex-grow w-full md:w-auto">
             {isEditing ? (
               <div className="space-y-4">
                 <div>
@@ -398,22 +398,22 @@ export default function Profile() {
                   </div>
                   <div className={`px-4 py-2 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
                     <span className="text-sm font-medium">Rating:</span>
-                    <span className="ml-2 font-bold text-green-500">1000</span>
+                    <span className="ml-2 font-bold text-green-500">10</span>
                   </div>
                 </div>
                 <div className="mt-4">
                   <div className="flex justify-between text-sm mb-1">
                     <span>To next rank</span>
-                    <span>75%</span>
+                    <span>10%</span>
                   </div>
                   <div className={`w-full h-2 rounded-full ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'}`}>
                     <div 
                       className="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-600" 
-                      style={{ width: '75%' }}
+                      style={{ width: '10%' }}
                     ></div>
                   </div>
                   <div className="text-xs text-gray-500 mt-1">
-                    Remaining 250 points to "4th Kyu" rank
+                    Remaining 90 points to "4th Kyu" rank
                   </div>
                 </div>
               </>
@@ -422,7 +422,7 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8">
         {/* Мой ментор */}
         <div className={`rounded-lg shadow-md p-6 ${theme === 'dark' ? 'bg-surface-dark' : 'bg-white'}`}>
           <h2 className={`text-xl font-semibold mb-4 ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>My Mentor</h2>

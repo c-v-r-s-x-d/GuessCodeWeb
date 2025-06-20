@@ -42,9 +42,6 @@ export default function AdminPanel() {
   useEffect(() => {
     const checkAdminStatus = async () => {
       try {
-        // TODO: Add API for checking admin status
-        // const response = await apiClient.api.checkAdminStatus();
-        // setIsAdmin(response.data.isAdmin);
         setIsAdmin(true); // Temporary solution
       } catch (error) {
         console.error('Error checking admin status:', error);
@@ -365,8 +362,7 @@ export default function AdminPanel() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className={`text-3xl font-bold mb-8
-          ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
+        <h1 className="text-3xl font-bold mb-8 text-white">
           Admin Panel
         </h1>
 
@@ -496,15 +492,14 @@ function UsersTab() {
                 <div className="flex space-x-2">
                   <select
                     value={user.roleId}
-                    onChange={(e) => handleRoleChange(user.id!, e.target.value)}
+                    onChange={(e) => handleRoleChange(user.id!, e.target.options[e.target.selectedIndex].text)}
                     className={`px-3 py-1 text-sm rounded
                       ${theme === 'dark' 
                         ? 'bg-gray-700 text-gray-200 border-gray-600' 
                         : 'bg-white text-gray-900 border-gray-300'}`}
                   >
-                    <option value="1">User</option>
-                    <option value="2">Mentor</option>
-                    <option value="3">Administrator</option>
+                    <option value="1">Admin</option>
+                    <option value="2">User</option>
                   </select>
                 </div>
                 <div className="flex space-x-2">

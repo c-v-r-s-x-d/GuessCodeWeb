@@ -60,16 +60,15 @@ export default function Katas() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className={`text-3xl font-bold 
+    <div className="container mx-auto px-2 sm:px-4 py-6 sm:py-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 gap-4 sm:gap-0">
+        <h1 className={`text-2xl sm:text-3xl font-bold 
           ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
           Katas
         </h1>
-        
         <Link
           to="/katas/create"
-          className={`px-4 py-2 rounded-lg text-white font-semibold
+          className={`w-full sm:w-auto px-4 py-2 rounded-lg text-white font-semibold text-center
             ${theme === 'dark' 
               ? 'bg-primary-dark hover:bg-blue-500' 
               : 'bg-primary hover:bg-blue-700'}`}
@@ -80,25 +79,25 @@ export default function Katas() {
 
       {/* Featured Kata Section */}
       {featuredKata && (
-        <div className={`p-6 rounded-lg shadow-md mb-8
+        <div className={`p-3 sm:p-6 rounded-lg shadow-md mb-6 sm:mb-8
           ${theme === 'dark' ? 'bg-surface-dark' : 'bg-white'}`}>
-          <div className="flex justify-between items-start mb-4">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 sm:mb-4 gap-2 sm:gap-0">
             <div>
-              <h2 className={`text-2xl font-bold mb-2
+              <h2 className={`text-lg sm:text-2xl font-bold mb-1 sm:mb-2
                 ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
                 Featured Kata
               </h2>
-              <div className="flex gap-2 mb-4">
-                <span className={`px-3 py-1 rounded-full text-sm
+              <div className="flex flex-wrap gap-2 mb-2 sm:mb-4">
+                <span className={`px-3 py-1 rounded-full text-xs sm:text-sm
                   ${theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-800'}`}>
                   {getLanguageLabel(featuredKata.programmingLanguage!)}
                 </span>
-                <span className={`px-3 py-1 rounded-full text-sm
+                <span className={`px-3 py-1 rounded-full text-xs sm:text-sm
                   ${theme === 'dark' ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-800'}`}>
                   {getDifficultyLabel(featuredKata.kataDifficulty!)}
                 </span>
                 {resolvedKatas.includes(featuredKata.id!) && (
-                  <span className="px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
+                  <span className="px-3 py-1 rounded-full text-xs sm:text-sm bg-green-100 text-green-800">
                     Completed
                   </span>
                 )}
@@ -106,7 +105,7 @@ export default function Katas() {
             </div>
             <button
               onClick={getNextKata}
-              className={`px-4 py-2 rounded-lg text-sm font-medium
+              className={`w-full sm:w-auto px-4 py-2 rounded-lg text-xs sm:text-sm font-medium mt-2 sm:mt-0
                 ${theme === 'dark' 
                   ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' 
                   : 'bg-gray-100 hover:bg-gray-200 text-gray-800'}`}
@@ -115,18 +114,18 @@ export default function Katas() {
             </button>
           </div>
           
-          <h3 className={`text-xl font-semibold mb-3
+          <h3 className={`text-base sm:text-xl font-semibold mb-2 sm:mb-3
             ${theme === 'dark' ? 'text-text-dark' : 'text-text-light'}`}>
             {featuredKata.title}
           </h3>
           
-          <p className={`mb-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+          <p className={`mb-3 sm:mb-4 text-xs sm:text-base ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
             {featuredKata.kataJsonContent?.kataDescription}
           </p>
 
           <Link
             to={`/kata/${featuredKata.id}`}
-            className={`inline-block px-6 py-2 rounded-lg text-white font-medium
+            className={`inline-block w-full sm:w-auto px-4 sm:px-6 py-2 rounded-lg text-white font-medium text-center
               ${theme === 'dark' 
                 ? 'bg-primary-dark hover:bg-blue-500' 
                 : 'bg-primary hover:bg-blue-700'}`}
@@ -137,24 +136,23 @@ export default function Katas() {
       )}
 
       {/* Filters Section */}
-      <div className={`p-4 rounded-lg shadow-md mb-6
+      <div className={`p-3 sm:p-4 rounded-lg shadow-md mb-4 sm:mb-6
         ${theme === 'dark' ? 'bg-surface-dark' : 'bg-white'}`}>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-4">
           <input
             type="text"
             placeholder="Search katas..."
-            className={`px-3 py-2 rounded-lg focus:outline-none focus:ring-2
+            className={`px-3 py-2 rounded-lg focus:outline-none focus:ring-2 w-full
               ${theme === 'dark' 
                 ? 'bg-background-dark border-gray-700 text-text-dark focus:ring-primary-dark' 
                 : 'border-gray-300 text-text-light focus:ring-primary'}`}
             value={filter.search}
             onChange={(e) => setFilter({...filter, search: e.target.value})}
           />
-          
           <select
             value={filter.difficulty}
             onChange={(e) => setFilter({...filter, difficulty: Number(e.target.value) as KataDifficulty})}
-            className={`px-3 py-2 rounded-lg focus:outline-none focus:ring-2
+            className={`px-3 py-2 rounded-lg focus:outline-none focus:ring-2 w-full
               ${theme === 'dark' 
                 ? 'bg-background-dark border-gray-700 text-text-dark focus:ring-primary-dark' 
                 : 'border-gray-300 text-text-light focus:ring-primary'}`}
@@ -167,11 +165,10 @@ export default function Katas() {
                 </option>
               ))}
           </select>
-
           <select
             value={filter.language}
             onChange={(e) => setFilter({...filter, language: Number(e.target.value) as ProgrammingLanguage})}
-            className={`px-3 py-2 rounded-lg focus:outline-none focus:ring-2
+            className={`px-3 py-2 rounded-lg focus:outline-none focus:ring-2 w-full
               ${theme === 'dark' 
                 ? 'bg-background-dark border-gray-700 text-text-dark focus:ring-primary-dark' 
                 : 'border-gray-300 text-text-light focus:ring-primary'}`}
@@ -184,11 +181,10 @@ export default function Katas() {
                 </option>
               ))}
           </select>
-
           <select
             value={filter.type}
             onChange={(e) => setFilter({...filter, type: Number(e.target.value) as KataType})}
-            className={`px-3 py-2 rounded-lg focus:outline-none focus:ring-2
+            className={`px-3 py-2 rounded-lg focus:outline-none focus:ring-2 w-full
               ${theme === 'dark' 
                 ? 'bg-background-dark border-gray-700 text-text-dark focus:ring-primary-dark' 
                 : 'border-gray-300 text-text-light focus:ring-primary'}`}

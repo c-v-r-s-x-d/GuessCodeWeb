@@ -5,11 +5,13 @@ import { useTheme } from '../../context/ThemeContext';
 import { apiClient } from '../../services/apiClient';
 import { useState, useEffect } from 'react';
 import { UserDto } from '../../services/api.generated';
+import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 
 export default function Navbar() {
   const { isAuthenticated, logout, user } = useAuth();
   const { theme } = useTheme();
   const [userData, setUserData] = useState<UserDto | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -42,12 +44,27 @@ export default function Navbar() {
     <nav className={`shadow-md transition-colors duration-200 backdrop-blur-sm
       ${theme === 'dark' ? 'bg-surface-dark/80' : 'bg-surface-light/50'}`}>
       <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-10">
-          <Link to="/" className={`font-bold text-base text-text-dark`}>
+        <div className="flex justify-between items-center h-14">
+          <Link to="/" className="font-bold text-base text-white">
             GuessCode
           </Link>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center md:hidden gap-2">
+            <ThemeToggle />
+            <button
+              className="p-2 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+              onClick={() => setMenuOpen(!menuOpen)}
+              aria-label="Открыть меню"
+            >
+              {menuOpen ? (
+                <XMarkIcon className="w-7 h-7" />
+              ) : (
+                <Bars3Icon className="w-7 h-7" />
+              )}
+            </button>
+          </div>
+
+          <div className="hidden md:flex items-center gap-6">
             <Link to="/leaderboard" className={`text-sm ${linkClass}`}>
               Leaderboard
             </Link>
@@ -135,6 +152,53 @@ export default function Navbar() {
             <ThemeToggle />
           </div>
         </div>
+        {menuOpen && (
+          <div className={`md:hidden mt-2 flex flex-col gap-2 rounded-lg shadow-lg p-4 animate-fade-in z-50 transition-colors duration-200
+            ${theme === 'dark' ? 'bg-surface-dark' : 'bg-white'}`}>
+            <Link to="/leaderboard" className={`${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'} text-base`} onClick={() => setMenuOpen(false)}>
+              Leaderboard
+            </Link>
+            <Link to="/faq" className={`${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'} text-base`} onClick={() => setMenuOpen(false)}>
+              FAQ
+            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link to="/challenges" className={`${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'} text-base`} onClick={() => setMenuOpen(false)}>
+                  Challenges
+                </Link>
+                <Link to="/find-mentor" className={`${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'} text-base`} onClick={() => setMenuOpen(false)}>
+                  Find Mentor
+                </Link>
+                <Link to="/become-mentor" className={`${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'} text-base`} onClick={() => setMenuOpen(false)}>
+                  Become Mentor
+                </Link>
+                {userData?.roleId === 1 && (
+                  <Link to="/admin" className={`${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'} text-base`} onClick={() => setMenuOpen(false)}>
+                    Administration
+                  </Link>
+                )}
+                <Link to="/profile" className={`${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'} text-base`} onClick={() => setMenuOpen(false)}>
+                  Profile
+                </Link>
+                <button
+                  onClick={() => { logout(); setMenuOpen(false); }}
+                  className={`text-base text-left w-full ${theme === 'dark' ? 'text-red-400' : 'text-red-600'}`}
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className={`${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'} text-base`} onClick={() => setMenuOpen(false)}>
+                  Login
+                </Link>
+                <Link to="/register" className={`${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'} text-base`} onClick={() => setMenuOpen(false)}>
+                  Register
+                </Link>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </nav>
   );

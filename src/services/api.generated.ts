@@ -859,13 +859,23 @@ export class Client {
     }
 
     /**
+     * @param kataIdQuery (optional) 
+     * @param kataType (optional) 
      * @return Success
      */
-    resolved(kataId: number): Promise<ResolvedKataDto> {
-        let url_ = this.baseUrl + "/api/kata-search/resolved/{kataId}";
-        if (kataId === undefined || kataId === null)
-            throw new Error("The parameter 'kataId' must be defined.");
-        url_ = url_.replace("{kataId}", encodeURIComponent("" + kataId));
+    resolved(kataIdQuery: number | undefined, kataType: KataType | undefined, kataIdPath: string): Promise<ResolvedKataDto> {
+        let url_ = this.baseUrl + "/api/kata-search/resolved/{kataId}?";
+        if (kataIdPath === undefined || kataIdPath === null)
+            throw new Error("The parameter 'kataIdPath' must be defined.");
+        url_ = url_.replace("{kataId}", encodeURIComponent("" + kataIdPath));
+        if (kataIdQuery === null)
+            throw new Error("The parameter 'kataIdQuery' cannot be null.");
+        else if (kataIdQuery !== undefined)
+            url_ += "kataId=" + encodeURIComponent("" + kataIdQuery) + "&";
+        if (kataType === null)
+            throw new Error("The parameter 'kataType' cannot be null.");
+        else if (kataType !== undefined)
+            url_ += "kataType=" + encodeURIComponent("" + kataType) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -1708,6 +1718,7 @@ export interface IChangeUserRoleDto {
 }
 
 export class FeedbackDto implements IFeedbackDto {
+    userId?: number;
     message?: string;
 
     constructor(data?: IFeedbackDto) {
@@ -1721,6 +1732,7 @@ export class FeedbackDto implements IFeedbackDto {
 
     init(_data?: any) {
         if (_data) {
+            this.userId = _data["userId"];
             this.message = _data["message"];
         }
     }
@@ -1734,12 +1746,14 @@ export class FeedbackDto implements IFeedbackDto {
 
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
+        data["userId"] = this.userId;
         data["message"] = this.message;
         return data;
     }
 }
 
 export interface IFeedbackDto {
+    userId?: number;
     message?: string;
 }
 

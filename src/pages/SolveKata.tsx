@@ -41,9 +41,14 @@ export default function SolveKata() {
   useEffect(() => {
     if (id) {
       loadKata(parseInt(id));
-      loadResolvedKata(parseInt(id));
     }
   }, [id]);
+
+  useEffect(() => {
+    if (id && kata) {
+      loadResolvedKata(parseInt(id), kata.kataType);
+    }
+  }, [id, kata]);
 
   const loadKata = async (kataId: number) => {
     try {
@@ -58,9 +63,9 @@ export default function SolveKata() {
     }
   };
 
-  const loadResolvedKata = async (kataId: number) => {
+  const loadResolvedKata = async (kataId: number, kataType?: KataType) => {
     try {
-      const response = await apiClient.resolved(kataId);
+      const response = await apiClient.resolved(kataId, kataType, String(kataId));
       setResolvedKata(response);
       if (response.sourceCode) {
         setSourceCode(response.sourceCode);
@@ -175,9 +180,38 @@ export default function SolveKata() {
               </h2>
               
               {kata.kataType === KataType._1 ? (
-                <div className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
-                  <p className="mb-2">Selected option: {resolvedKata.selectedOptionId}</p>
-                  <p>Points earned: {50/*resolvedKata.pointEarned*/}</p>
+                <div className="space-y-4">
+                  {kata.kataJsonContent?.answerOptions?.map((option) => {
+                    const isAnswered = resolvedKata?.selectedOptionId !== undefined && resolvedKata?.selectedOptionId !== null;
+                    const isSelected = resolvedKata?.selectedOptionId === option.optionId;
+                    const isCorrect = resolvedKata?.isSuccess && isSelected;
+                    const isIncorrect = isAnswered && isSelected && !resolvedKata?.isSuccess;
+                    let buttonClass = '';
+                    if (isCorrect) {
+                      buttonClass = theme === 'dark' ? 'bg-green-900/30 text-green-300 border-green-500' : 'bg-green-50 text-green-800 border-green-500';
+                    } else if (isIncorrect) {
+                      buttonClass = theme === 'dark' ? 'bg-red-900/30 text-red-300 border-red-500' : 'bg-red-50 text-red-800 border-red-500';
+                    } else if (isSelected) {
+                      buttonClass = theme === 'dark' ? 'bg-primary-dark text-white' : 'bg-primary text-white';
+                    } else {
+                      buttonClass = theme === 'dark' ? 'bg-surface-dark hover:bg-gray-700' : 'bg-white hover:bg-gray-50';
+                    }
+                    return (
+                      <button
+                        key={option.optionId}
+                        onClick={() => !isAnswered && setSelectedOption(option.optionId!)}
+                        className={`w-full p-4 text-left rounded-lg border transition-colors ${buttonClass}`}
+                        disabled={isAnswered}
+                      >
+                        {option.option}
+                        {isAnswered && isSelected && (
+                          <span className="ml-2 text-sm">
+                            {isCorrect ? '✓ Correct' : '✗ Incorrect'}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -243,33 +277,38 @@ export default function SolveKata() {
           ) : (
             <div className="space-y-6 mb-12">
               {kata.kataType === KataType._1 ? (
-                // Code Reading - варианты ответов
                 <div className="space-y-4">
-                  {kata.kataJsonContent?.answerOptions?.map((option) => (
-                    <button
-                      key={option.optionId}
-                      onClick={() => !correctOptionId && setSelectedOption(option.optionId!)}
-                      className={`w-full p-4 text-left rounded-lg border transition-colors
-                        ${selectedOption === option.optionId
-                          ? theme === 'dark' 
-                            ? 'bg-primary-dark text-white'
-                            : 'bg-primary text-white'
-                          : correctOptionId === option.optionId
-                            ? theme === 'dark'
-                              ? 'bg-green-900/30 text-green-300 border-green-500'
-                              : 'bg-green-50 text-green-800 border-green-500'
-                            : theme === 'dark'
-                              ? 'bg-surface-dark hover:bg-gray-700'
-                              : 'bg-white hover:bg-gray-50'
-                        }`}
-                      disabled={!!correctOptionId}
-                    >
-                      {option.option}
-                      {correctOptionId === option.optionId && (
-                        <span className="ml-2 text-sm">✓ Correct answer </span>
-                      )}
-                    </button>
-                  ))}
+                  {kata.kataJsonContent?.answerOptions?.map((option) => {
+                    const isAnswered = resolvedKata?.selectedOptionId !== undefined && resolvedKata?.selectedOptionId !== null;
+                    const isSelected = resolvedKata?.selectedOptionId === option.optionId;
+                    const isCorrect = resolvedKata?.isSuccess && isSelected;
+                    const isIncorrect = isAnswered && isSelected && !resolvedKata?.isSuccess;
+                    let buttonClass = '';
+                    if (isCorrect) {
+                      buttonClass = theme === 'dark' ? 'bg-green-900/30 text-green-300 border-green-500' : 'bg-green-50 text-green-800 border-green-500';
+                    } else if (isIncorrect) {
+                      buttonClass = theme === 'dark' ? 'bg-red-900/30 text-red-300 border-red-500' : 'bg-red-50 text-red-800 border-red-500';
+                    } else if (isSelected) {
+                      buttonClass = theme === 'dark' ? 'bg-primary-dark text-white' : 'bg-primary text-white';
+                    } else {
+                      buttonClass = theme === 'dark' ? 'bg-surface-dark hover:bg-gray-700' : 'bg-white hover:bg-gray-50';
+                    }
+                    return (
+                      <button
+                        key={option.optionId}
+                        onClick={() => !isAnswered && setSelectedOption(option.optionId!)}
+                        className={`w-full p-4 text-left rounded-lg border transition-colors ${buttonClass}`}
+                        disabled={isAnswered}
+                      >
+                        {option.option}
+                        {isAnswered && isSelected && (
+                          <span className="ml-2 text-sm">
+                            {isCorrect ? '✓ Correct' : '✗ Incorrect'}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               ) : (
                 // Bug Finding или Code Optimization - поле для ввода кода
